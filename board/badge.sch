@@ -9985,6 +9985,10 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="TP3" library="testpad" deviceset="PTR1" device="B2,54"/>
 <part name="J2" library="ukhas" deviceset="3.5MMJACKSMD" device="" value="20-0096"/>
 <part name="JP2" library="SparkFun-Connectors" deviceset="M06" device="SMD"/>
+<part name="R8" library="rcl" deviceset="R-EU_" device="R0603" value="10k"/>
+<part name="R9" library="rcl" deviceset="R-EU_" device="R0603" value="10k"/>
+<part name="+3V17" library="supply1" deviceset="+3V3" device=""/>
+<part name="GND21" library="supply1" deviceset="0V" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -10092,6 +10096,10 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <instance part="TP3" gate="G$1" x="27.94" y="119.38" rot="R180"/>
 <instance part="J2" gate="G$1" x="22.86" y="53.34" rot="R180"/>
 <instance part="JP2" gate="G$1" x="73.66" y="66.04" rot="R180"/>
+<instance part="R8" gate="G$1" x="-7.62" y="114.3" rot="R180"/>
+<instance part="R9" gate="G$1" x="2.54" y="114.3" rot="R180"/>
+<instance part="+3V17" gate="G$1" x="-15.24" y="114.3" rot="R90"/>
+<instance part="GND21" gate="1" x="10.16" y="114.3" rot="R90"/>
 </instances>
 <busses>
 </busses>
@@ -10218,6 +10226,10 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <pinref part="JP1" gate="G$1" pin="VCC"/>
 <pinref part="+3V8" gate="G$1" pin="+3V3"/>
 <wire x1="50.8" y1="63.5" x2="45.72" y2="63.5" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="R8" gate="G$1" pin="2"/>
+<pinref part="+3V17" gate="G$1" pin="+3V3"/>
 </segment>
 </net>
 <net name="0V" class="0">
@@ -10370,6 +10382,10 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <segment>
 <pinref part="J2" gate="G$1" pin="2"/>
 <pinref part="GND23" gate="1" pin="0V"/>
+</segment>
+<segment>
+<pinref part="R9" gate="G$1" pin="1"/>
+<pinref part="GND21" gate="1" pin="0V"/>
 </segment>
 </net>
 <net name="N$8" class="0">
@@ -10606,8 +10622,14 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <net name="ADC1" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="PA0"/>
-<wire x1="-10.16" y1="106.68" x2="0" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="-10.16" y1="106.68" x2="-2.54" y2="106.68" width="0.1524" layer="91"/>
 <label x="-5.08" y="106.68" size="1.778" layer="95"/>
+<pinref part="R8" gate="G$1" pin="1"/>
+<pinref part="R9" gate="G$1" pin="2"/>
+<wire x1="-2.54" y1="106.68" x2="0" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="-2.54" y1="114.3" x2="-2.54" y2="106.68" width="0.1524" layer="91"/>
+<junction x="-2.54" y="106.68"/>
+<junction x="-2.54" y="114.3"/>
 </segment>
 <segment>
 <wire x1="12.7" y1="58.42" x2="2.54" y2="58.42" width="0.1524" layer="91"/>
