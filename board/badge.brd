@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.25" unitdist="mm" unit="mm" style="lines" multiple="1" display="no" altdistance="0.125" altunitdist="mm" altunit="mm"/>
+<grid distance="0.079375" unitdist="mm" unit="mm" style="lines" multiple="1" display="yes" altdistance="0.125" altunitdist="mm" altunit="mm"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="yes" active="yes"/>
@@ -115,7 +115,6 @@
 <layer number="219" name="219bmp" color="20" fill="1" visible="no" active="no"/>
 <layer number="220" name="220bmp" color="21" fill="1" visible="no" active="no"/>
 <layer number="221" name="221bmp" color="22" fill="1" visible="no" active="no"/>
-<layer number="222" name="222bmp" color="23" fill="1" visible="no" active="no"/>
 <layer number="223" name="223bmp" color="24" fill="1" visible="no" active="no"/>
 <layer number="224" name="224bmp" color="25" fill="1" visible="no" active="no"/>
 <layer number="231" name="Eagle3D_PG1" color="14" fill="1" visible="yes" active="yes"/>
@@ -134,13 +133,11 @@
 <wire x1="57.375" y1="40.75" x2="48.5" y2="28.75" width="0" layer="20"/>
 <text x="48" y="33.5" size="1.016" layer="22" font="vector" ratio="14" rot="SMR90">3.3V only</text>
 <text x="47.5" y="42.75" size="1.016" layer="22" font="vector" ratio="14" rot="MR270">Remove battery</text>
-<wire x1="53.25" y1="55.25" x2="53.25" y2="45" width="2" layer="46"/>
 <text x="54.75" y="60.25" size="1.016" layer="22" font="vector" ratio="13" rot="MR180">RST</text>
 <text x="54.75" y="62.75" size="1.016" layer="22" font="vector" ratio="13" rot="MR180">CLK</text>
 <text x="55" y="63.75" size="1.016" layer="22" font="vector" ratio="13" rot="MR90">DIO</text>
 <text x="55" y="66.75" size="1.27" layer="22" font="vector" ratio="13" rot="MR0">SWD</text>
 <text x="58.25" y="45.75" size="1.27" layer="22" font="vector" ratio="13" rot="MR0">SWD</text>
-<wire x1="27" y1="76.75" x2="38.25" y2="76.75" width="3.4" layer="46"/>
 <text x="25" y="22.5" size="1.27" layer="21" font="vector" ratio="13" rot="R90">RESET</text>
 <text x="41.75" y="23" size="1.27" layer="21" font="vector" ratio="13" rot="R90">BOOT</text>
 <text x="26" y="22.75" size="1.016" layer="22" font="vector" ratio="14" rot="MR0">P0</text>
@@ -159,6 +156,22 @@
 <wire x1="48.5" y1="28.75" x2="44.5" y2="23" width="0" layer="20"/>
 <wire x1="32.625" y1="12.75" x2="32.625" y2="85.375" width="0" layer="51" style="longdash"/>
 <text x="40" y="17.25" size="1.016" layer="21" font="vector" ratio="14" rot="R56">Rev. A May '14</text>
+<wire x1="26.9875" y1="78.4225" x2="38.4175" y2="78.4225" width="0" layer="20"/>
+<wire x1="38.4175" y1="78.4225" x2="40.005" y2="76.835" width="0" layer="20" curve="-90"/>
+<wire x1="40.005" y1="76.835" x2="40.005" y2="76.5175" width="0" layer="20"/>
+<wire x1="40.005" y1="76.5175" x2="38.4175" y2="74.93" width="0" layer="20" curve="-90"/>
+<wire x1="38.4175" y1="74.93" x2="26.9875" y2="74.93" width="0" layer="20"/>
+<wire x1="26.9875" y1="74.93" x2="25.4" y2="76.5175" width="0" layer="20" curve="-90"/>
+<wire x1="25.4" y1="76.5175" x2="25.4" y2="76.835" width="0" layer="20"/>
+<wire x1="25.4" y1="76.835" x2="26.9875" y2="78.4225" width="0" layer="20" curve="-90"/>
+<wire x1="53.260625" y1="56.276875" x2="54.2925" y2="55.245" width="0" layer="20" curve="-90"/>
+<wire x1="54.2925" y1="55.245" x2="54.2925" y2="44.846875" width="0" layer="20"/>
+<wire x1="54.2925" y1="44.846875" x2="53.419375" y2="43.97375" width="0" layer="20" curve="-90"/>
+<wire x1="53.419375" y1="43.97375" x2="53.260625" y2="43.97375" width="0" layer="20"/>
+<wire x1="53.260625" y1="43.97375" x2="53.0225" y2="43.97375" width="0" layer="20"/>
+<wire x1="53.0225" y1="43.97375" x2="52.149375" y2="44.846875" width="0" layer="20" curve="-90"/>
+<wire x1="52.149375" y1="44.846875" x2="52.149375" y2="55.165625" width="0" layer="20"/>
+<wire x1="52.149375" y1="55.165625" x2="53.260625" y2="56.276875" width="0" layer="20" curve="-90"/>
 </plain>
 <libraries>
 <library name="ukhas">
@@ -3473,106 +3486,6 @@ design rules under a new name.</description>
 </polygon>
 </signal>
 </signals>
-<errors>
-<approved hash="18,29,7b26ab3b27037910"/>
-<approved hash="18,29,d43b12e0e740fe98"/>
-<approved hash="18,29,e23cba9afaa6a200"/>
-<approved hash="18,29,ce2ccd9f22f7ae49"/>
-<approved hash="18,29,7925f938e9006713"/>
-<approved hash="18,30,47c5da9b2b50efaa"/>
-<approved hash="18,30,2719dbcb0b480fa7"/>
-<approved hash="18,30,ab0770b3b97455c6"/>
-<approved hash="18,30,6cf7afaf53ddc921"/>
-<approved hash="18,30,2380a59632d981c9"/>
-<approved hash="18,30,9cfa5fae8215b97c"/>
-<approved hash="18,30,db7327ab6bc86f2d"/>
-<approved hash="18,30,d8cf459b4bd08f20"/>
-<approved hash="18,30,795918be3e656eff"/>
-<approved hash="18,30,4fe08cc29339a826"/>
-<approved hash="18,30,0d41537f564c590f"/>
-<approved hash="18,30,bfed7cc2c390591b"/>
-<approved hash="18,30,910d0c2b68d0ac52"/>
-<approved hash="18,30,d8c2246b48c84c5c"/>
-<approved hash="18,30,285f40334cd82fb5"/>
-<approved hash="18,30,3ee6fdcd7c164700"/>
-<approved hash="18,30,4e9b7f5217712bb9"/>
-<approved hash="18,30,ceeb0dcdc6cf5c4d"/>
-<approved hash="18,30,0507f9ab48c84c59"/>
-<approved hash="18,30,d50b482b68d0ac54"/>
-<approved hash="18,30,3287e354f77113a7"/>
-<approved hash="18,30,b2f171ca7ec8e457"/>
-<approved hash="18,30,b446c43374decfa9"/>
-<approved hash="18,30,42fc81ca7ed145da"/>
-<approved hash="18,30,e91d742b48d08c42"/>
-<approved hash="18,30,fd82013b68486ccc"/>
-<approved hash="18,30,b68a9757b7758bad"/>
-<approved hash="18,30,76ffb5ce06cc9c59"/>
-<approved hash="18,30,d75cf7a47b9d4c60"/>
-<approved hash="18,30,cb21082201c93af7"/>
-<approved hash="18,30,61b0fcbb48508cff"/>
-<approved hash="18,30,b1bc4d3b68486cf2"/>
-<approved hash="18,30,22061161a4b10cd4"/>
-<approved hash="18,30,ff153c1d81ef1b43"/>
-<approved hash="18,30,43622ba36b9b9c58"/>
-<approved hash="18,30,0f18cc1d81f6bace"/>
-<approved hash="18,30,85b918bb48508cf6"/>
-<approved hash="18,30,55b5a93b68486cfb"/>
-<approved hash="18,30,2f77afbcdb992c4c"/>
-<approved hash="18,30,130ed01d81f6bad8"/>
-<approved hash="18,30,a612456314aebcc1"/>
-<approved hash="18,30,e303201d81ef1b55"/>
-<approved hash="18,30,753e89ab68c86c60"/>
-<approved hash="18,30,a532382b48d08c6d"/>
-<approved hash="18,30,646f7433f4d96f87"/>
-<approved hash="18,30,52d591cb9ed0a5f3"/>
-<approved hash="18,30,62a9335357719389"/>
-<approved hash="18,30,a2d861cb9ec9047e"/>
-<approved hash="18,30,251c597e9979e51b"/>
-<approved hash="18,30,314a764f75287a0c"/>
-<approved hash="18,30,c2212b7de43b6f63"/>
-<approved hash="18,30,fc2c0f192eaf6448"/>
-<approved hash="18,30,f4f1881a700008c5"/>
-<approved hash="18,30,0872e92e86a192cf"/>
-<approved hash="18,30,4cc7d2d11689a67b"/>
-<approved hash="18,30,7ba7075cfb468393"/>
-<approved hash="18,30,f9709c8364ab056a"/>
-<approved hash="18,30,f1c818f4db3d63aa"/>
-<approved hash="18,30,e8cb1ad02fad70cf"/>
-<approved hash="18,30,5870c65416dbb2b0"/>
-<approved hash="18,30,3bcbdae186f7a140"/>
-<approved hash="18,30,760813f7efdf8e12"/>
-<approved hash="18,30,e5570cafda7f77d1"/>
-<approved hash="18,30,eddb9168699211b3"/>
-<approved hash="18,30,e4f6160b50ef0376"/>
-<approved hash="18,30,2f60ce7c8765b519"/>
-<approved hash="18,30,2b99b5ef16a9be8d"/>
-<approved hash="18,30,62d11ecee2349ab9"/>
-<approved hash="18,30,87577b9120b2de74"/>
-<approved hash="18,30,b3d1b7171c388afe"/>
-<approved hash="18,30,3c04c22d590ea527"/>
-<approved hash="18,30,6882feab958491ad"/>
-<approved hash="4,1,f19d1d0592ba3cc9"/>
-<approved hash="4,1,42e63b6c3f9fd591"/>
-<approved hash="4,1,b5aea48a9f2e1eb1"/>
-<approved hash="4,1,3d5783a27bb2baa1"/>
-<approved hash="4,1,8a4625a28a329ad0"/>
-<approved hash="4,1,c89cd159c3a0c4c8"/>
-<approved hash="4,1,37e15f09f2229e10"/>
-<approved hash="4,1,2f56d55873066303"/>
-<approved hash="4,1,c3cce7f22dabd798"/>
-<approved hash="4,1,e17aa4a6ebbbf35b"/>
-<approved hash="4,1,77b00d7928c754f1"/>
-<approved hash="4,1,c3cce7f22dabd798"/>
-<approved hash="4,1,f3306b768a2064da"/>
-<approved hash="4,1,323317185638ea79"/>
-<approved hash="4,16,8a4625a28a329ad0"/>
-<approved hash="4,16,c89cd159c3a0c4c8"/>
-<approved hash="4,16,2f56d55873066303"/>
-<approved hash="4,16,e17aa4a6ebbbf35b"/>
-<approved hash="4,16,77b00d7928c754f1"/>
-<approved hash="4,16,f3306b768a2064da"/>
-<approved hash="4,16,323317185638ea79"/>
-</errors>
 </board>
 </drawing>
 </eagle>
