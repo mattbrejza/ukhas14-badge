@@ -10,7 +10,6 @@
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/spi.h>
 
 #define LCD_PORT        GPIOA
 #define LCD_CS          GPIO2

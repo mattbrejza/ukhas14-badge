@@ -8,8 +8,8 @@
 #include "badge.h"
 #include "lcd.h"
 
-/* This is a temporary bodge covering a missing define in locm3 */
-#define LCD_SPI SPI1_I2S1_BASE
+#define tiny_wait() do{__asm__("nop");__asm__("nop");__asm__("nop");__asm__("nop");__asm__("nop"); \
+                    } while(0)
 
 /* Private prototypes */
 static void lcd_write_instruction(const uint8_t cmd);
@@ -21,35 +21,14 @@ static void lcd_write_instruction(const uint8_t cmd);
 void lcd_init(void)
 {
     // Clock the SPI periph and associated hardware pins
-    rcc_periph_clock_enable(RCC_SPI1);
     rcc_periph_clock_enable(RCC_GPIOA);
 
     // Configure pins for RESET and CS
-    gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1 | GPIO2);
+    gpio_mode_setup(LCD_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, 
+            LCD_CS | LCD_RESET | LCD_MOSI | LCD_SCK);
 
-    // Enable AF0 (LCD_SPI periph) on these pins
-    gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
-            GPIO5 | GPIO6 | GPIO7);
-    gpio_set_af(GPIOA, GPIO_AF0, GPIO5 | GPIO6 | GPIO7);
-
-    // Reset and enable the SPI periph
-    spi_reset(LCD_SPI);
-    spi_init_master(LCD_SPI, SPI_CR1_BAUDRATE_FPCLK_DIV_64,
-            SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
-            SPI_CR1_CPHA_CLK_TRANSITION_1,
-            SPI_CR1_CRCL_8BIT,
-            SPI_CR1_MSBFIRST);
-
-    // Trigger an RXNE event when we have 8 bits (one byte) in the buffer
-    spi_fifo_reception_threshold_8bit(LCD_SPI);
-
-    // NSS must be set high for the peripheral to function
-    spi_enable_software_slave_management(LCD_SPI);
-    spi_set_nss_high(LCD_SPI);
-    gpio_set(GPIOA, GPIO2);
-
-    // Enable
-    spi_enable(LCD_SPI);
+    // SCK idles low
+    gpio_clear(LCD_PORT, LCD_SCK);
 
     // Reset the panel
     gpio_set(GPIOA, GPIO1);
@@ -117,20 +96,46 @@ void lcd_init(void)
 
 /**
  * Send a single instruction byte to the LCD panel
- * @param cmd The command to be send to the LCD panel
+ * @param cmd The command to be sent to the LCD panel
  */
 static void lcd_write_instruction(const uint8_t cmd)
 {
+    int8_t i;
+
     // Assert CS
     gpio_clear(GPIOA, GPIO2);
+    tiny_wait();
 
-    // Send the byte
-    spi_send8(LCD_SPI, cmd);
-    spi_read8(LCD_SPI);
+    // Send 9 bit SPI with MSB as 0 (for command)
+    // Send the MSB (9th bit)
+    gpio_clear(LCD_PORT, LCD_SCK);
+    gpio_clear(LCD_PORT, LCD_MOSI);
+    tiny_wait();
+    gpio_set(LCD_PORT, LCD_SCK);
+    tiny_wait();
 
-    // Wait until send FIFO is empty
-    while(SPI_SR(LCD_SPI) & SPI_SR_BSY);
+    // Now send the remaining 8 bits
+    for(i=7; i>=0; i--)
+    {
+        // Drop sck
+        gpio_clear(LCD_PORT, LCD_SCK);
+        
+        // Change data bit
+        if(cmd & (1<<i))
+            gpio_set(LCD_PORT, LCD_MOSI);
+        else
+            gpio_clear(LCD_PORT, LCD_MOSI);
+
+        tiny_wait();
+        // Raise SCK
+        gpio_set(LCD_PORT, LCD_SCK);
+        tiny_wait();
+    }
+
+    // SCK idles low
+    gpio_clear(LCD_PORT, LCD_SCK);
 
     // Deassert CS
+    tiny_wait();
     gpio_set(GPIOA, GPIO2);
 }
