@@ -24,8 +24,8 @@ void lcd_init(void)
     rcc_periph_clock_enable(RCC_SPI1);
     rcc_periph_clock_enable(RCC_GPIOA);
 
-    // Configure pins for RESET and CS
-    gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO1 | GPIO2);
+    // Configure pins for DC and CS
+    gpio_mode_setup(LCD_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LCD_CS | LCD_DC);
 
     // Enable AF0 (LCD_SPI periph) on these pins
     gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE,
@@ -51,12 +51,8 @@ void lcd_init(void)
     // Enable
     spi_enable(LCD_SPI);
 
-    // Reset the panel
-    gpio_set(GPIOA, GPIO1);
-    _delay_ms(20);
-    gpio_clear(GPIOA, GPIO1);
-    _delay_ms(200);
-    gpio_set(GPIOA, GPIO1);
+    // Lower DC to enter instruction mode
+    gpio_clear(LCD_PORT, LCD_DC);
     _delay_ms(200);
 
     // Run through the init routine given in the datasheet

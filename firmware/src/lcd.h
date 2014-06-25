@@ -14,7 +14,7 @@
 
 #define LCD_PORT        GPIOA
 #define LCD_CS          GPIO2
-#define LCD_RESET       GPIO1
+#define LCD_DC          GPIO1
 #define LCD_MOSI        GPIO7
 #define LCD_SCK         GPIO5
 
