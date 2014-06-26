@@ -8972,6 +8972,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="GND30" library="supply1" deviceset="0V" device=""/>
 <part name="+3V18" library="supply1" deviceset="+3V3" device=""/>
 <part name="C14" library="rcl" deviceset="C-EU" device="C0603" value="1u"/>
+<part name="R11" library="rcl" deviceset="R-EU_" device="R0603" value="10k"/>
 </parts>
 <sheets>
 <sheet>
@@ -9086,6 +9087,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <instance part="GND30" gate="1" x="-12.7" y="15.24" rot="R270"/>
 <instance part="+3V18" gate="G$1" x="-15.24" y="20.32" rot="R90"/>
 <instance part="C14" gate="G$1" x="7.62" y="58.42" rot="R90"/>
+<instance part="R11" gate="G$1" x="7.62" y="63.5" rot="R180"/>
 </instances>
 <busses>
 </busses>
@@ -9625,9 +9627,9 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <junction x="-2.54" y="114.3"/>
 </segment>
 <segment>
-<pinref part="C14" gate="G$1" pin="1"/>
-<wire x1="5.08" y1="58.42" x2="0" y2="58.42" width="0.1524" layer="91"/>
-<label x="0" y="58.42" size="1.778" layer="95"/>
+<pinref part="R11" gate="G$1" pin="1"/>
+<wire x1="12.7" y1="63.5" x2="20.32" y2="63.5" width="0.1524" layer="91"/>
+<label x="12.7" y="63.5" size="1.778" layer="95"/>
 </segment>
 </net>
 <net name="N$5" class="0">
@@ -9768,6 +9770,14 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <segment>
 <pinref part="J2" gate="G$1" pin="4"/>
 <pinref part="C14" gate="G$1" pin="2"/>
+</segment>
+</net>
+<net name="N$24" class="0">
+<segment>
+<pinref part="C14" gate="G$1" pin="1"/>
+<pinref part="R11" gate="G$1" pin="2"/>
+<wire x1="5.08" y1="58.42" x2="2.54" y2="58.42" width="0.1524" layer="91"/>
+<wire x1="2.54" y1="58.42" x2="2.54" y2="63.5" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
