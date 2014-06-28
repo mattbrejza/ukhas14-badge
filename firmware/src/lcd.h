@@ -56,6 +56,16 @@
 #define LCD_CHARGEPUMP_OFF                  0x10
 #define LCD_CHARGEPUMP_ON                   0x14
 
+
+/* Display constants */
+#define LCD_WIDTH                           128
+#define LCD_HEIGHT                          32
+
 void lcd_init(void);
+void lcd_test(void);
+void lcd_set_display_ptr(uint8_t start_row, uint8_t start_col, uint8_t end_row, uint8_t end_col);
+void lcd_write_string(char *string);
+void lcd_write_string_medium(char *string, uint8_t start_row, uint8_t start_col);
+void lcd_clear(void);
 
 #endif /* __UKHAS_LCD_H__ */

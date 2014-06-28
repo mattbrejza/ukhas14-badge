@@ -7,12 +7,15 @@
 
 #include "badge.h"
 #include "lcd.h"
+#include "font.h"
 
 /* This is a temporary bodge covering a missing define in locm3 */
 #define LCD_SPI SPI1_I2S1_BASE
 
 /* Private prototypes */
 static void lcd_write_instruction(const uint8_t cmd);
+static uint8_t stretch_up(uint8_t in);
+static uint8_t stretch_down(uint8_t in);
 
 /**
  * Initialise the LCD following the init routine given in the datasheet. See
@@ -106,10 +109,187 @@ void lcd_init(void)
     // invalid setting! (Valid are 0x00, 0x20 or 0x30)
     lcd_write_instruction(LCD_VCOMH_DESEL_LVL);
     lcd_write_instruction(0x40);
+    
+    //put into line-by-line address increment mode
+    lcd_write_instruction(0x20);
+    lcd_write_instruction(0x00);
 
     // Finally, turn the display on
     lcd_write_instruction(LCD_DISPLAY_ON);
 }
+
+void lcd_set_display_ptr(uint8_t start_row, uint8_t start_col, uint8_t end_row, uint8_t end_col)
+{
+    lcd_write_instruction(LCD_COL_ADDRESS);
+	lcd_write_instruction(start_col);
+	lcd_write_instruction(end_col);
+	lcd_write_instruction(LCD_PAGE_ADDRESS);
+	lcd_write_instruction(start_row);
+	lcd_write_instruction(end_row);
+
+}
+
+void lcd_clear(void)
+{
+    lcd_set_display_ptr(0,0,LCD_HEIGHT/8,LCD_WIDTH-1);
+    gpio_set(LCD_PORT, LCD_DC);
+	gpio_clear(GPIOA, GPIO2);
+    uint16_t i = 0;
+	for (i = 0; i < (LCD_HEIGHT/8)*LCD_WIDTH; i++) {
+        
+        spi_send8(LCD_SPI, 0x00);        
+		spi_read8(LCD_SPI);
+		// Wait until send FIFO is empty
+		while(SPI_SR(LCD_SPI) & SPI_SR_BSY);
+    }
+
+	gpio_clear(LCD_PORT, LCD_DC);
+	gpio_set(GPIOA, GPIO2);
+}
+
+void lcd_write_string(char *string)
+{
+    gpio_set(LCD_PORT, LCD_DC);
+	gpio_clear(GPIOA, GPIO2);
+    uint8_t i,j;
+    i = 0;
+    j = 0;
+	while (string[i]) {
+        
+        if (j >= 5)
+        {
+            j = 0;
+            i++;
+            spi_send8(LCD_SPI, 0x00);
+        }
+        else{
+            spi_send8(LCD_SPI, font5x7[(string[i]-32)*5+j]);
+            j++;
+        }
+		spi_read8(LCD_SPI);
+
+		// Wait until send FIFO is empty
+		while(SPI_SR(LCD_SPI) & SPI_SR_BSY);
+    }
+
+	gpio_clear(LCD_PORT, LCD_DC);
+	gpio_set(GPIOA, GPIO2);
+}
+
+void lcd_write_string_medium(char *string, uint8_t start_row, uint8_t start_col)
+{
+
+    lcd_set_display_ptr(start_row,start_col,start_row,LCD_WIDTH-1);
+
+    gpio_set(LCD_PORT, LCD_DC);
+	gpio_clear(GPIOA, GPIO2);
+    uint8_t i,j;
+    i = 0;
+    j = 0;
+	while (string[i]) {        
+        if (j >= 10)
+        {
+            j = 0;
+            i++;
+            spi_send8(LCD_SPI, 0x00);
+        }
+        else{
+            spi_send8(LCD_SPI, stretch_up(font5x7[(string[i]-32)*5+(j>>1)]));
+            j++;
+        }
+		spi_read8(LCD_SPI);
+
+		// Wait until send FIFO is empty
+		while(SPI_SR(LCD_SPI) & SPI_SR_BSY);
+    }
+
+	gpio_clear(LCD_PORT, LCD_DC);
+	gpio_set(GPIOA, GPIO2);
+    
+    lcd_set_display_ptr(start_row+1,start_col,start_row+1,LCD_WIDTH-1);
+
+    gpio_set(LCD_PORT, LCD_DC);
+	gpio_clear(GPIOA, GPIO2);
+    i = 0;
+    j = 0;
+	while (string[i]) {        
+        if (j >= 10)
+        {
+            j = 0;
+            i++;
+            spi_send8(LCD_SPI, 0x00);
+        }
+        else{
+            spi_send8(LCD_SPI, stretch_down(font5x7[(string[i]-32)*5+(j>>1)]));
+            j++;
+        }
+		spi_read8(LCD_SPI);
+
+		// Wait until send FIFO is empty
+		while(SPI_SR(LCD_SPI) & SPI_SR_BSY);
+    }
+
+	gpio_clear(LCD_PORT, LCD_DC);
+	gpio_set(GPIOA, GPIO2);
+}
+
+void lcd_test(void)
+{
+lcd_write_instruction(0x20);
+lcd_write_instruction(0x00);
+	lcd_write_instruction(LCD_COL_ADDRESS);
+	lcd_write_instruction(0x00);
+	lcd_write_instruction(LCD_WIDTH-1);
+	lcd_write_instruction(LCD_PAGE_ADDRESS);
+	lcd_write_instruction(0x00);
+	lcd_write_instruction(0x03);
+	
+	uint16_t i,j,k;
+    j = 0;
+    k = 0;
+	gpio_set(LCD_PORT, LCD_DC);
+	gpio_clear(GPIOA, GPIO2);
+	for (i=0; i<(LCD_WIDTH*LCD_HEIGHT/8); i++) {
+        j++;
+        if (j > 5)
+        {
+            j = 0;
+            spi_send8(LCD_SPI, 0x00);
+        }
+        else{
+            spi_send8(LCD_SPI, font5x7[k]);
+            k++;
+            }
+		spi_read8(LCD_SPI);
+
+		// Wait until send FIFO is empty
+		while(SPI_SR(LCD_SPI) & SPI_SR_BSY);
+    }
+
+	gpio_clear(LCD_PORT, LCD_DC);
+	gpio_set(GPIOA, GPIO2);
+}
+
+static uint8_t stretch_up(uint8_t in)
+{
+//0b 0000abcd into 0b aabbccdd
+
+    return ((in << 0) & 0x01) | ((in << 1) & 0x02) |
+           ((in << 1) & 0x04) | ((in << 2) & 0x08) |
+           ((in << 2) & 0x10) | ((in << 3) & 0x20) |
+           ((in << 3) & 0x40) | ((in << 4) & 0x80);
+
+}
+static uint8_t stretch_down(uint8_t in)
+{
+//0b abcd0000 into 0b aabbccdd
+    return ((in >> 4) & 0x01) | ((in >> 3) & 0x02) |
+           ((in >> 3) & 0x04) | ((in >> 2) & 0x08) |
+           ((in >> 2) & 0x10) | ((in >> 1) & 0x20) |
+           ((in >> 1) & 0x40) | ((in >> 0) & 0x80);
+
+}
+
 
 /**
  * Send a single instruction byte to the LCD panel

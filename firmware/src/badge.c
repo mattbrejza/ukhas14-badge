@@ -15,10 +15,15 @@
 int main(void)
 {
     lcd_init();
-
+    lcd_clear();
+    lcd_set_display_ptr(2,0,3,127);
+    lcd_write_string("SUSF / APEX / ASTRA");
+    lcd_write_string_medium("Matt Brejza", 0, 0);
     /* Blink the LED (PC8) on the board. */
-    while (1)
+    while (1){
         _delay_ms(100);
+		
+		}
 
     return 0;
 }
