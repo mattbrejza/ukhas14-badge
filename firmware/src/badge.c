@@ -9,12 +9,17 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/timer.h>
-#include <libopencm3/stm32/common/timer_common_all.h>
 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "badge.h"
 #include "lcd.h"
 
+
 void init(void);
+
 
 int main(void)
 {
@@ -25,8 +30,15 @@ int main(void)
     lcd_write_string("SUSF / APEX / ASTRA");
     lcd_write_string_medium("Matt Brejza", 0, 0);
     /* Blink the LED (PC8) on the board. */
+
+    char buff[20];
     while (1){
-        _delay_ms(100);
+        _delay_ms(1000);
+
+        sprintf(buff,"t: %u     ",(unsigned int)TIM3_CNT);
+       // itostr(buff,TIM3_CNT);
+        lcd_set_display_ptr(2,0,3,127);
+        lcd_write_string(buff);
 
         //gpio_set(GPIOF, GPIO1);
         //_delay_ms(1000);
@@ -53,7 +65,7 @@ void init(void)
     timer_set_mode(TIM3, TIM_CR1_CKD_CK_INT_MUL_2,
                TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
     gpio_set_af(GPIOB, GPIO_AF1, GPIO1);
-    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO1);
+    gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO1);
               
     timer_set_oc_mode(TIM3, TIM_OC4, TIM_OCM_PWM2);
     timer_enable_oc_output(TIM3, TIM_OC4);
