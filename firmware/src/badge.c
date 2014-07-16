@@ -16,9 +16,7 @@
 #include <string.h>
 #include "badge.h"
 #include "lcd.h"
-
-
-void init(void);
+#include "rfm69.h"
 
 
 int main(void)
@@ -30,6 +28,8 @@ int main(void)
     lcd_write_string("SUSF / UKHAS.net");
     lcd_write_string_medium("Phil /craag", 0, 0);
     /* Blink the LED (PC8) on the board. */
+    
+    rfm69_init(0);
 
     char buff[20];
     while (1){
