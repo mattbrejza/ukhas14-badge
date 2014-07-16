@@ -766,17 +766,6 @@
 #define RF_TESTLNA_NORMAL           0x1B  // Default
 #define RF_TESTLNA_SENSITIVE        0x2D  //
 
-uint8_t     rfm69_mode;
-
-uint8_t     rfm69_slaveSelectPin;
-float       rfm69_temperatureFudge;
-
-uint8_t     rfm69_bufLen;
-uint8_t     rfm69_buf[RFM69_MAX_MESSAGE_LEN];
-
-int16_t     rfm69_lastRssi;
-
-  
 void        rfm69_init( float tempFudge );
 
 uint8_t     rfm69_spiRead(uint8_t reg);

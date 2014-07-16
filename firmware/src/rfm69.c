@@ -11,6 +11,16 @@
 #include "rfm69config.h"
 #include <string.h>
 
+static uint8_t     rfm69_mode;
+
+/*static uint8_t     rfm69_slaveSelectPin;*/
+static float       rfm69_temperatureFudge;
+
+static uint8_t     rfm69_bufLen;
+static uint8_t     rfm69_buf[RFM69_MAX_MESSAGE_LEN];
+
+static int16_t     rfm69_lastRssi;
+
 void rfm69_init(float tempFudge)
 {
     uint8_t i;

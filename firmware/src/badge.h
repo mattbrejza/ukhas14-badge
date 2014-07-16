@@ -11,7 +11,6 @@
 /* We need to include at least once locm3 unit for type definitions */
 #include <libopencm3/stm32/rcc.h>
 
-void init(void);
 void _delay_ms(const uint32_t delay);
 
 #endif /* __UKHAS_BADGE_H__ */

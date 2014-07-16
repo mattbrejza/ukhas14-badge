@@ -18,6 +18,8 @@
 #include "lcd.h"
 #include "rfm69.h"
 
+/* Private prototypes */
+static void init(void);
 
 int main(void)
 {
@@ -32,29 +34,29 @@ int main(void)
     rfm69_init(0);
 
     char buff[20];
-    while (1){
+    while (1)
+    {
         _delay_ms(1000);
 
         sprintf(buff,"t: %u     ",(unsigned int)TIM3_CNT);
-       // itostr(buff,TIM3_CNT);
+        // itostr(buff,TIM3_CNT);
         lcd_set_display_ptr(2,0,3,127);
         lcd_write_string(buff);
 
         //gpio_set(GPIOF, GPIO1);
         //_delay_ms(1000);
 
-       //gpio_clear(GPIOF, GPIO1);
+        //gpio_clear(GPIOF, GPIO1);
         //}
-        
+
         if (!(GPIOF_IDR & GPIO1))
-        	lcd_write_string("A");
-		
-		}
+            lcd_write_string("A");
+    }
 
     return 0;
 }
 
-void init(void)
+static void init(void)
 {
     rcc_periph_clock_enable(RCC_GPIOF);
     rcc_periph_clock_enable(RCC_GPIOB);
@@ -72,7 +74,6 @@ void init(void)
     timer_set_oc_value(TIM3, TIM_OC4, 200);
     timer_set_period(TIM3, 1000);
     timer_enable_counter(TIM3);
-
 }
 
 /**
