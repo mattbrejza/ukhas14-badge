@@ -6,14 +6,9 @@
 #include "demodulator.h"
 
 
-
-//t_fir_state init_fir_filter(const uint8_t length, const int32_t *coeff )
-//{
-//
-//	t_fir_state out;
-//	out.coeff = coeff;
-//	out.delay_line
-//}
+inline int8_t sign(int32_t in){if (in > 0){return 1;}else{return -1;}}
+inline int8_t max(int8_t in1, int8_t in2){if (in1 > in2){return in1;}else{return in2;}}
+inline int8_t min(int8_t in1, int8_t in2){if (in1 > in2){return in2;}else{return in1;}}
 
 void fir_filter(t_fir_state state, int32_t *input, int32_t *output, uint16_t len)
 {
@@ -81,4 +76,107 @@ uint16_t cic_filter(t_cic_state state, int32_t *input, int32_t *output, uint16_t
 	return out_count;
 }
 
+
+uint16_t bit_sync(t_bit_sync_state state, int32_t *input, int32_t *output, uint16_t len)
+{
+
+	uint16_t i,count;
+	count = 0;
+
+	for (i = 0; i < len; i++)
+	{
+		switch (state.pos)
+		{
+		case 0:
+			state.late = sign(*input);
+			break;
+		case 1:
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			state.late += sign(*input);
+			break;
+
+		case 6:
+			state.late += sign(*input);
+			state.error = abs(state.late) - abs(state.early);
+			state.error_i += state.error;
+			state.error_i = max(state.error_i, -2);
+			state.error_i = min(state.error_i, 2);
+			break;
+
+		case 7:
+			if (state.vco < 103)
+				state.pos = 6;
+			else if (state.vco > 137)
+				state.pos = 9;
+			else if (state.vco > 122)
+				state.pos = 8;
+			break;
+
+		case 8:  //sample
+			*output = *input;
+			output++;
+			count++;
+			break;
+
+		case 9:
+			state.early = sign(*input);
+			break;
+		case 10:
+		case 11:
+		case 12:
+		case 13:
+		case 14:
+		case 15:
+			state.early += sign(*input);
+			break;
+		}
+
+		state.pos++;
+		if (state.pos >= 16)
+			state.pos = 0;
+
+		//                 P=0.5               I=0.06
+		state.vco += 16 + (state.error>>1) ;// + state.error_i;
+
+		input++;
+	}
+	return count;
+}
+
+uint16_t char_sync(t_char_sync_state state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
+{
+	uint16_t i,j,out_count;
+	out_count = 0;
+	for (i = 0; i < len; i++)
+	{
+
+		if (state.bit_counter == 0)  //idle state
+		{
+			state.mask = 1;
+			state.current_char = 0;
+			if (*input > 0)
+				state.bit_counter = data_bits;
+		}
+		else
+		{
+			if (*input < 0)
+				state.current_char |= state.mask;
+			state.mask = state.mask << 1;
+
+			state.bit_counter--;
+			if (state.bit_counter == 0){
+				*output = state.current_char;
+				out_count++;
+				output++;
+			}
+		}
+
+		input++;
+
+	}
+	return out_count;
+}
 
