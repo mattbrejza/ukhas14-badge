@@ -148,7 +148,7 @@ uint16_t bit_sync(t_bit_sync_state state, int32_t *input, int32_t *output, uint1
 
 uint16_t char_sync(t_char_sync_state state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
 {
-	uint16_t i,j,out_count;
+	uint16_t i,out_count;
 	out_count = 0;
 	for (i = 0; i < len; i++)
 	{
