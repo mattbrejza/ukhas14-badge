@@ -4,11 +4,14 @@
  * Jon Sowman 2014
  * <jon@jonsowman.com>
  */
-
+#include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/timer.h>
+#include <libopencm3/stm32/adc.h>
+#include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/dma.h>
 
 
 
@@ -20,11 +23,12 @@
 #include "demodulator.h"
 
 void init(void);
+static void my_usart_print_int(uint32_t usart, int32_t value);
 
 #define BUFF_LEN 128
 
-int16_t adc_buffer[BUFF_LEN*2];
-int16_t adc_buffer[] = {-333, -506, -436, -157, 200, 462, 488, 236, -176, -481, -440, -78, 332, 512, 354, -45, -418, -496, -228, 191, 482, 447, 104, -311, -511, -369, 18, 395, 505, 272, -143, -462, -471, -160, 260, 502, 409, 41, -357, -511, -319, 87, 435, 490, 213, -209, -488, -439, -95, 315, 511, 361, -31, -403, -503, -262, 156, 468, 466, 148, -269, -505, -399, -25, 367, 511, 309, -101, -443, -486, -201, 221, 492, 432, 81, -326, -512, -352, 46, 412, 501, 251, -169, -474, -459, -135, 281, 507, 390, 11, -376, -509, -298, 115, 450, 481, 188, -233, -496, -424, -66, 336, 512, 342, -60, -420, -498, -239, 181, 479, 453, 121, -292, -509, -381, 4, 386, 508, 287, -128, -456, -476, -175, 245, 499, 416, 52, -347};
+volatile uint16_t adc_buffer[BUFF_LEN*2];
+//int16_t adc_buffer[] = {-333, -506, -436, -157, 200, 462, 488, 236, -176, -481, -440, -78, 332, 512, 354, -45, -418, -496, -228, 191, 482, 447, 104, -311, -511, -369, 18, 395, 505, 272, -143, -462, -471, -160, 260, 502, 409, 41, -357, -511, -319, 87, 435, 490, 213, -209, -488, -439, -95, 315, 511, 361, -31, -403, -503, -262, 156, 468, 466, 148, -269, -505, -399, -25, 367, 511, 309, -101, -443, -486, -201, 221, 492, 432, 81, -326, -512, -352, 46, 412, 501, 251, -169, -474, -459, -135, 281, 507, 390, 11, -376, -509, -298, 115, 450, 481, 188, -233, -496, -424, -66, 336, 512, 342, -60, -420, -498, -239, 181, 479, 453, 121, -292, -509, -381, 4, 386, 508, 287, -128, -456, -476, -175, 245, 499, 416, 52, -347};
 int32_t buffer1[BUFF_LEN];
 int32_t buffer2[BUFF_LEN];   //make smaller
 int32_t buffer3[BUFF_LEN/4];
@@ -70,6 +74,21 @@ int main(void)
 	gpio_mode_setup(GPIOF, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO5);
 
 
+	while(1)
+	{
+		//gpio_set(GPIOF, GPIO5);
+		//adc_start_conversion_regular(ADC1);
+		//while (!(adc_eoc(ADC1)));
+		//gpio_clear(GPIOF, GPIO5);
+
+		//uint16_t ar = adc_read_regular(ADC1);
+		uint32_t tv = DMA1_CMAR1;
+		//my_usart_print_int(USART1, ADC1_DR);//adc_buffer[2]);
+		my_usart_print_int(USART1, adc_buffer[2]);
+		_delay_ms(100);
+
+
+	}
 
 
 
@@ -227,6 +246,13 @@ int main(void)
     return 0;
 }
 
+void dma1_channel1_isr(void)
+{
+	gpio_toggle(GPIOF, GPIO5);
+	if (dma_get_interrupt_flag(DMA1,1,DMA_HTIF))
+		dma_clear_interrupt_flags(DMA1,1,DMA_HTIF);
+}
+
 void init(void)
 {
     rcc_periph_clock_enable(RCC_GPIOF);
@@ -246,6 +272,123 @@ void init(void)
     timer_set_period(TIM3, 1000);
     timer_enable_counter(TIM3);
 
+
+    //dma
+    rcc_periph_clock_enable(RCC_DMA);
+	dma_channel_reset(DMA1,1);
+	nvic_enable_irq(NVIC_DMA1_CHANNEL1_IRQ);
+	dma_set_peripheral_address(DMA1,1,(0x40000000U) + 0x12400 + 0x40);
+	dma_set_memory_address(DMA1,1,(uint32_t)&adc_buffer[0]);
+	dma_enable_circular_mode(DMA1,1);
+	dma_set_number_of_data(DMA1,1,10);
+	dma_set_read_from_peripheral(DMA1,1);
+	dma_enable_memory_increment_mode(DMA1,1);
+	dma_disable_peripheral_increment_mode(DMA1,1);
+	dma_set_peripheral_size(DMA1,1,DMA_CCR_PSIZE_16BIT);
+	dma_set_memory_size(DMA1,1,DMA_CCR_PSIZE_16BIT);
+	//dma_disable_mem2mem_mode(DMA1,1);
+	dma_set_priority(DMA1,1,DMA_CCR_PL_HIGH);
+	dma_enable_half_transfer_interrupt(DMA1,1);
+	//dma_clear_interrupt_flags(DMA1,1,DMA_HTIF | DMA_TCIF);
+
+
+
+    //adc
+	rcc_periph_clock_enable(RCC_ADC);
+    rcc_periph_clock_enable(RCC_GPIOA);
+    gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0);
+
+
+    uint8_t channel_array[] = { ADC_CHANNEL0};
+
+    adc_power_off(ADC1);
+ //  adc_calibrate_start(ADC1);
+//	adc_calibrate_wait_finish(ADC1);
+	//adc_set_operation_mode(ADC1, ADC_MODE_SCAN); //adc_set_operation_mode(ADC1, ADC_MODE_SCAN_INFINITE);
+	adc_set_operation_mode(ADC1, ADC_MODE_SCAN);//ADC_MODE_SCAN_INFINITE);
+	//adc_disable_external_trigger_regular(ADC1); //adc_enable_external_trigger_regular(ADC1, 1<<6, 1<<10);
+	adc_enable_external_trigger_regular(ADC1, 0<<6, 1<<10);//fucking libopencm3
+	adc_set_right_aligned(ADC1);
+	ADC1_CFGR1 |= ADC_CFGR1_DMACFG;
+	adc_enable_dma(ADC1);   //!!!!!!!!!!!!!!!!!111
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_013DOT5);
+	adc_set_regular_sequence(ADC1, 1, channel_array);
+	adc_set_resolution(ADC1, ADC_RESOLUTION_12BIT);
+
+	adc_disable_analog_watchdog(ADC1);
+	adc_power_on(ADC1);
+	/*
+	adc_power_off(ADC1);
+	adc_set_operation_mode(ADC1, ADC_MODE_SCAN);
+	adc_set_single_conversion_mode(ADC1);
+	adc_enable_external_trigger_regular(ADC1,0,1<<10);
+	//adc_enable_eoc_interrupt_injected(ADC1);
+	adc_set_right_aligned(ADC1);
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_013DOT5);
+	adc_power_on(ADC1);
+*/
+	_delay_ms(100);
+
+	//tim1 (adc tigger)
+	rcc_periph_clock_enable(RCC_TIM1);
+	timer_reset(TIM1);
+	//timer_set_mode(TIM1, TIM_CR1_CKD_CK_INT_MUL_2,
+	//               TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+	//timer_set_oc_mode(TIM1, TIM_OC4, TIM_OCM_PWM2);
+	//timer_enable_oc_output(TIM1, TIM_OC4);
+	//timer_set_oc_value(TIM1, TIM_OC4, 200);
+	timer_set_prescaler(TIM1, 1000);
+	timer_set_period(TIM1, 1000);
+	timer_set_master_mode(TIM1,TIM_CR2_MMS_UPDATE);
+	timer_enable_counter(TIM1);
+
+	ADC_CR(ADC1) |= ADC_CR_ADSTART;
+	dma_enable_channel(DMA1,1);              //!!!!!!!!!!!!!!!!!111
+
+
+
+	//usart
+	rcc_periph_clock_enable(RCC_USART1);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
+	gpio_set_af(GPIOA, GPIO_AF1, GPIO9);
+	usart_set_baudrate(USART1, 38400);
+	usart_set_databits(USART1, 8);
+	usart_set_stopbits(USART1, USART_CR2_STOP_1_0BIT);
+	usart_set_mode(USART1, USART_MODE_TX);
+	usart_set_parity(USART1, USART_PARITY_NONE);
+	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
+
+	/* Finally enable the USART. */
+	usart_enable(USART1);
+
+}
+
+static void my_usart_print_int(uint32_t usart, int32_t value)
+{
+	int8_t i;
+	int8_t nr_digits = 0;
+	char buffer[25];
+
+	if (value < 0) {
+		usart_send_blocking(usart, '-');
+		value = value * -1;
+	}
+
+	if (value == 0) {
+		usart_send_blocking(usart, '0');
+	}
+
+	while (value > 0) {
+		buffer[nr_digits++] = "0123456789"[value % 10];
+		value /= 10;
+	}
+
+	for (i = nr_digits-1; i >= 0; i--) {
+		usart_send_blocking(usart, buffer[i]);
+	}
+
+	usart_send_blocking(usart, '\r');
+	usart_send_blocking(usart, '\n');
 }
 
 /**
