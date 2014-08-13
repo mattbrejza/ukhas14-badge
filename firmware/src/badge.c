@@ -27,7 +27,9 @@ static void my_usart_print_int(uint32_t usart, int32_t value);
 
 #define BUFF_LEN 128
 
-volatile uint16_t adc_buffer[BUFF_LEN*2];
+//volatile int16_t atest[] = {0, 119, 227, 295, 259, 189, 30, -34, -25, 98, 216, 324, 291, 245, 110, 5, -1, 55, 182, 275, 340, 255, 212, 120, 7, 47, 139, 243, 273, 241, 183, 31, -37, 22, 135, 247, 303, 294, 219, 124, 15, -16, 86, 179, 284, 292, 252, 207, 34, -10, 38, 152, 257, 286, 249, 179, 43, -9, 36, 133, 263, 292, 271, 211, 79, -7, -3, 95, 235, 312, 284, 242, 153, 36, 3, 63, 199, 265, 287, 198, 104, 20, -48, 44, 166, 275};
+
+volatile int16_t adc_buffer[BUFF_LEN*2] = {0};
 //int16_t adc_buffer[] = {-333, -506, -436, -157, 200, 462, 488, 236, -176, -481, -440, -78, 332, 512, 354, -45, -418, -496, -228, 191, 482, 447, 104, -311, -511, -369, 18, 395, 505, 272, -143, -462, -471, -160, 260, 502, 409, 41, -357, -511, -319, 87, 435, 490, 213, -209, -488, -439, -95, 315, 511, 361, -31, -403, -503, -262, 156, 468, 466, 148, -269, -505, -399, -25, 367, 511, 309, -101, -443, -486, -201, 221, 492, 432, 81, -326, -512, -352, 46, 412, 501, 251, -169, -474, -459, -135, 281, 507, 390, 11, -376, -509, -298, 115, 450, 481, 188, -233, -496, -424, -66, 336, 512, 342, -60, -420, -498, -239, 181, 479, 453, 121, -292, -509, -381, 4, 386, 508, 287, -128, -456, -476, -175, 245, 499, 416, 52, -347};
 int32_t buffer1[BUFF_LEN];
 int32_t buffer2[BUFF_LEN];   //make smaller
@@ -39,22 +41,27 @@ char textout[5] = {0};
 const int32_t coeff[] = {-3, 13, 34, 56, 78, 98, 114, 125, 128, 125, 114, 98, 78, 56, 34, 13, -3};
 
 //l=8
-const int16_t sin_lut_1k[] = {0, 707, 1000, 707, 0, -707, -1, -707};
-const int16_t cos_lut_1k[]  = {1000, 707, 0, -707, -1, -707, 0, 707};
+const int16_t sin_lut_1k[] = {0, 707, 1000, 707, 0, -707, -1000, -707};
+const int16_t cos_lut_1k[]  = {1000, 707, 0, -707, -1000, -707, 0, 707};
 //l=32
 const int16_t sin_lut_750[] = {0, 556, 924, 981, 707, 195, -383, -831, -1000, -831, -383, 195, 707, 981, 924, 556, 0, -556, -924, -981, -707, -195, 383, 831, 1000, 831, 383, -195, -707, -981, -924, -556};
 const int16_t cos_lut_750[] = {1000, 831, 383, -195, -707, -981, -924, -556, 0, 556, 924, 981, 707, 195, -383, -831, -1000, -831, -383, 195, 707, 981, 924, 556, 0, -556, -924, -981, -707, -195, 383, 831};
 
-t_cic_state cs1 = {.delay_line_in = &dl_cic[0], .delay_line_out = &dl_cic[4], .stages = 4, .rate = 5};
-t_cic_state cs2 = {.delay_line_in = &dl_cic[8], .delay_line_out = &dl_cic[12], .stages = 4, .rate = 5};
-t_cic_state cs3 = {.delay_line_in = &dl_cic[16], .delay_line_out = &dl_cic[20], .stages = 4, .rate = 5};
-t_cic_state cs4 = {.delay_line_in = &dl_cic[24], .delay_line_out = &dl_cic[28], .stages = 4, .rate = 5};
+t_cic_state cs1 = {.delay_line_in = &dl_cic[0], .delay_line_out = &dl_cic[4], .stages = 4, .rate = 10};
+t_cic_state cs2 = {.delay_line_in = &dl_cic[8], .delay_line_out = &dl_cic[12], .stages = 4, .rate = 10};
+t_cic_state cs3 = {.delay_line_in = &dl_cic[16], .delay_line_out = &dl_cic[20], .stages = 4, .rate = 10};
+t_cic_state cs4 = {.delay_line_in = &dl_cic[24], .delay_line_out = &dl_cic[28], .stages = 4, .rate = 10};
 t_fir_state fs1 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[0], .length = 16};
 t_fir_state fs2 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[15], .length = 16};
 t_fir_state fs3 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[30], .length = 16};
 t_fir_state fs4 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[45], .length = 16};
 t_bit_sync_state s2;
 t_char_sync_state s3;
+
+volatile uint8_t half_complete_flag = 0;
+volatile uint8_t full_complete_flag = 0;
+
+int32_t last = 0;
 
 int main(void)
 {
@@ -72,8 +79,8 @@ int main(void)
 
 
 	gpio_mode_setup(GPIOF, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO5);
-
-
+	gpio_mode_setup(GPIOF, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4);
+/*
 	while(1)
 	{
 		//gpio_set(GPIOF, GPIO5);
@@ -82,13 +89,14 @@ int main(void)
 		//gpio_clear(GPIOF, GPIO5);
 
 		//uint16_t ar = adc_read_regular(ADC1);
-		uint32_t tv = DMA1_CMAR1;
+		//uint32_t tv = DMA1_CMAR1;
 		//my_usart_print_int(USART1, ADC1_DR);//adc_buffer[2]);
-		my_usart_print_int(USART1, adc_buffer[2]);
+		my_usart_print_int(USART1, adc_buffer[0]);
+		my_usart_print_int(USART1, ADC1_DR);
 		_delay_ms(100);
 
 
-	}
+	}*/
 
 
 
@@ -97,43 +105,67 @@ int main(void)
 
 
 	uint8_t lo1_p = 0,lo2_p = 0;
+	usart_send_blocking(USART1,"H");
 
 
 
 	while(1)
 	{
-		uint8_t i,lo;
+		uint8_t lo;
+		uint16_t i;
 		lo = lo1_p;
 
-		_delay_ms(100);
+
+		uint16_t buff_end,buff_start;
+		while ((half_complete_flag == 0) && (full_complete_flag == 0));
+		if (half_complete_flag){
+			buff_end = BUFF_LEN;
+			buff_start = 0;
+		}else {
+			buff_end = BUFF_LEN<<1;
+			buff_start = BUFF_LEN;
+		}
+
+		half_complete_flag = 0;
+		full_complete_flag = 0;
+
+		//nvic_disable_irq(NVIC_DMA1_CHANNEL1_IRQ);
+
 		gpio_set(GPIOF, GPIO5);
+
+
 		//process sin 1k
-		for (i = 0; i < BUFF_LEN; i++)
+		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = (adc_buffer[i] * sin_lut_1k[lo]) >> 12;   //!!!!!!!!11
+			buffer1[i] = ((adc_buffer[i]) * sin_lut_1k[lo]) >> 12;   //!!!!!!!!11
 			lo++;
 			if (lo >= 8)
 				lo = 0;
 		}
-		uint8_t c1 = cic_filter(cs1, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(fs1, buffer2, buffer1,  c1);
+		uint8_t c1 = cic_filter(&cs1, buffer1, buffer2,  BUFF_LEN);
+		for (i = 0; i < c1; i++)
+			buffer2[i] = buffer2[i] >> 4;
+		fir_filter(&fs1, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
 			buffer3[i] = buffer1[i] * buffer1[i];
+//			my_usart_print_int(USART1, buffer1[i]);
 		}
 
 		//process cos 1k
 		lo = lo1_p;
-		for (i = 0; i < BUFF_LEN; i++)
+		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = (adc_buffer[i] * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
+			buffer1[i] = ((atest[i]) * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
 			lo++;
 			if (lo >= 8)
 				lo = 0;
 		}
-		c1 = cic_filter(cs2, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(fs2, buffer2, buffer1,  c1);
+		c1 = cic_filter(&cs2, buffer1, buffer2,  BUFF_LEN);
+		//for (i = 0; i < c1; i++)
+		//			buffer2[i] = buffer2[i] >> 2;
+		fir_filter(&fs2, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
@@ -143,15 +175,17 @@ int main(void)
 
 		//process sin 750
 		lo = lo2_p;
-		for (i = 0; i < BUFF_LEN; i++)
+		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = (adc_buffer[i] * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[i] = ((atest[i]-000) * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
 			lo++;
 			if (lo >= 32)
 				lo = 0;
 		}
-		c1 = cic_filter(cs3, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(fs3, buffer2, buffer1,  c1);
+		c1 = cic_filter(&cs3, buffer1, buffer2,  BUFF_LEN);
+		//for (i = 0; i < c1; i++)
+		//			buffer2[i] = buffer2[i] >> 2;
+		fir_filter(&fs3, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
@@ -160,27 +194,41 @@ int main(void)
 
 		//process cos 750
 		lo = lo2_p;
-		for (i = 0; i < BUFF_LEN; i++)
+		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = (adc_buffer[i] * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[i] = ((atest[i]-000) * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
 			lo++;
 			if (lo >= 32)
 				lo = 0;
 		}
-		c1 = cic_filter(cs4, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(fs4, buffer2, buffer1,  c1);
+		c1 = cic_filter(&cs4, buffer1, buffer2,  BUFF_LEN);
+		//for (i = 0; i < c1; i++)
+		//			buffer2[i] = buffer2[i] >> 2;
+		fir_filter(&fs4, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
 			buffer3[i] -= buffer1[i] * buffer1[i];
+
+
 		}
 		lo2_p = lo;
 
 
-		uint8_t c2 =  bit_sync(s2, buffer3, buffer1, c1);
-		uint8_t c3 = char_sync(s3, buffer1, textout, c2, 7);
-		gpio_clear(GPIOF, GPIO5);
+		uint8_t c2 =  bit_sync(&s2, buffer3, buffer1, c1);
+		uint8_t c3 = char_sync(&s3, buffer1, textout, c2, 7);
+		if (c3 > 0)
+			usart_send_blocking(USART1, &textout[0]);
 
+		/*
+
+		for (i = buff_start; i < buff_end; i++)
+		{
+			my_usart_print_int(USART1, adc_buffer[i]-last);
+			last  = adc_buffer[i];
+		}*/
+
+		gpio_clear(GPIOF, GPIO5);
 	}
 
 
@@ -248,9 +296,18 @@ int main(void)
 
 void dma1_channel1_isr(void)
 {
-	gpio_toggle(GPIOF, GPIO5);
-	if (dma_get_interrupt_flag(DMA1,1,DMA_HTIF))
+
+	if (dma_get_interrupt_flag(DMA1,1,DMA_HTIF)){
 		dma_clear_interrupt_flags(DMA1,1,DMA_HTIF);
+		half_complete_flag = 1;
+		gpio_set(GPIOF, GPIO4);
+	}
+
+	if (dma_get_interrupt_flag(DMA1,1,DMA_TCIF)){
+		dma_clear_interrupt_flags(DMA1,1,DMA_TCIF);
+		full_complete_flag = 1;
+		gpio_clear(GPIOF, GPIO4);
+	}
 }
 
 void init(void)
@@ -272,41 +329,18 @@ void init(void)
     timer_set_period(TIM3, 1000);
     timer_enable_counter(TIM3);
 
-
-    //dma
-    rcc_periph_clock_enable(RCC_DMA);
-	dma_channel_reset(DMA1,1);
-	nvic_enable_irq(NVIC_DMA1_CHANNEL1_IRQ);
-	dma_set_peripheral_address(DMA1,1,(0x40000000U) + 0x12400 + 0x40);
-	dma_set_memory_address(DMA1,1,(uint32_t)&adc_buffer[0]);
-	dma_enable_circular_mode(DMA1,1);
-	dma_set_number_of_data(DMA1,1,10);
-	dma_set_read_from_peripheral(DMA1,1);
-	dma_enable_memory_increment_mode(DMA1,1);
-	dma_disable_peripheral_increment_mode(DMA1,1);
-	dma_set_peripheral_size(DMA1,1,DMA_CCR_PSIZE_16BIT);
-	dma_set_memory_size(DMA1,1,DMA_CCR_PSIZE_16BIT);
-	//dma_disable_mem2mem_mode(DMA1,1);
-	dma_set_priority(DMA1,1,DMA_CCR_PL_HIGH);
-	dma_enable_half_transfer_interrupt(DMA1,1);
-	//dma_clear_interrupt_flags(DMA1,1,DMA_HTIF | DMA_TCIF);
-
-
-
     //adc
 	rcc_periph_clock_enable(RCC_ADC);
-    rcc_periph_clock_enable(RCC_GPIOA);
-    gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0);
-
-
-    uint8_t channel_array[] = { ADC_CHANNEL0};
-
-    adc_power_off(ADC1);
- //  adc_calibrate_start(ADC1);
-//	adc_calibrate_wait_finish(ADC1);
+	rcc_periph_clock_enable(RCC_GPIOA);
+	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, GPIO0);
+	uint8_t channel_array[] = { ADC_CHANNEL0};
+	adc_power_off(ADC1);
+	adc_calibrate_start(ADC1);
+	adc_calibrate_wait_finish(ADC1);
 	//adc_set_operation_mode(ADC1, ADC_MODE_SCAN); //adc_set_operation_mode(ADC1, ADC_MODE_SCAN_INFINITE);
 	adc_set_operation_mode(ADC1, ADC_MODE_SCAN);//ADC_MODE_SCAN_INFINITE);
 	//adc_disable_external_trigger_regular(ADC1); //adc_enable_external_trigger_regular(ADC1, 1<<6, 1<<10);
+//	adc_set_single_conversion_mode(ADC1);
 	adc_enable_external_trigger_regular(ADC1, 0<<6, 1<<10);//fucking libopencm3
 	adc_set_right_aligned(ADC1);
 	ADC1_CFGR1 |= ADC_CFGR1_DMACFG;
@@ -317,6 +351,29 @@ void init(void)
 
 	adc_disable_analog_watchdog(ADC1);
 	adc_power_on(ADC1);
+
+
+    //dma
+    rcc_periph_clock_enable(RCC_DMA);
+	dma_channel_reset(DMA1,1);
+	nvic_enable_irq(NVIC_DMA1_CHANNEL1_IRQ);
+	dma_set_peripheral_address(DMA1,1,(0x40000000U) + 0x12400 + 0x40);
+	dma_set_memory_address(DMA1,1,(uint32_t)adc_buffer);
+	dma_set_number_of_data(DMA1,1,BUFF_LEN*2);
+	dma_enable_circular_mode(DMA1,1);
+	dma_set_read_from_peripheral(DMA1,1);
+	dma_enable_memory_increment_mode(DMA1,1);
+//	dma_disable_peripheral_increment_mode(DMA1,1);
+	dma_set_peripheral_size(DMA1,1,DMA_CCR_PSIZE_16BIT);
+	dma_set_memory_size(DMA1,1,DMA_CCR_MSIZE_16BIT);
+	//dma_disable_mem2mem_mode(DMA1,1);
+	dma_set_priority(DMA1,1,DMA_CCR_PL_HIGH);
+	dma_enable_half_transfer_interrupt(DMA1,1);
+	dma_enable_transfer_complete_interrupt(DMA1,1);
+	//dma_clear_interrupt_flags(DMA1,1,DMA_HTIF | DMA_TCIF);
+
+
+
 	/*
 	adc_power_off(ADC1);
 	adc_set_operation_mode(ADC1, ADC_MODE_SCAN);
@@ -337,8 +394,8 @@ void init(void)
 	//timer_set_oc_mode(TIM1, TIM_OC4, TIM_OCM_PWM2);
 	//timer_enable_oc_output(TIM1, TIM_OC4);
 	//timer_set_oc_value(TIM1, TIM_OC4, 200);
-	timer_set_prescaler(TIM1, 1000);
-	timer_set_period(TIM1, 1000);
+	timer_set_prescaler(TIM1, 0);
+	timer_set_period(TIM1, 937);
 	timer_set_master_mode(TIM1,TIM_CR2_MMS_UPDATE);
 	timer_enable_counter(TIM1);
 
@@ -351,7 +408,7 @@ void init(void)
 	rcc_periph_clock_enable(RCC_USART1);
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
 	gpio_set_af(GPIOA, GPIO_AF1, GPIO9);
-	usart_set_baudrate(USART1, 38400);
+	usart_set_baudrate(USART1, 500000 );
 	usart_set_databits(USART1, 8);
 	usart_set_stopbits(USART1, USART_CR2_STOP_1_0BIT);
 	usart_set_mode(USART1, USART_MODE_TX);
@@ -387,8 +444,8 @@ static void my_usart_print_int(uint32_t usart, int32_t value)
 		usart_send_blocking(usart, buffer[i]);
 	}
 
-	usart_send_blocking(usart, '\r');
-	usart_send_blocking(usart, '\n');
+	usart_send_blocking(usart, ',');
+	//usart_send_blocking(usart, '\n');
 }
 
 /**

@@ -29,8 +29,8 @@ typedef struct s_char_sync_state{
 	uint8_t mask;
 } t_char_sync_state;
 
-void fir_filter(t_fir_state state, int32_t *input, int32_t *output, uint16_t len);
-uint16_t cic_filter(t_cic_state state, int32_t *input, int32_t *output, uint16_t len);
-uint16_t bit_sync(t_bit_sync_state state, int32_t *input, int32_t *output, uint16_t len);
-uint16_t char_sync(t_char_sync_state state, int32_t *input, char *output, uint16_t len, uint8_t data_bits);
+void fir_filter(t_fir_state *state, int32_t *input, int32_t *output, uint16_t len);
+uint16_t cic_filter(t_cic_state *state, int32_t *input, int32_t *output, uint16_t len);
+uint16_t bit_sync(t_bit_sync_state *state, int32_t *input, int32_t *output, uint16_t len);
+uint16_t char_sync(t_char_sync_state *state, int32_t *input, char *output, uint16_t len, uint8_t data_bits);
 
