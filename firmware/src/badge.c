@@ -69,10 +69,14 @@ int main(void)
     init();
     lcd_init();
     lcd_clear();
-    lcd_set_display_ptr(2,0,3,127);
-  //  lcd_write_string("SUSF / APEX / ASTRA");
-  //  lcd_write_string_medium("Matt Brejza", 0, 0);
-    /* Blink the LED (PC8) on the board. */
+
+    if (gpio_get(GPIOF,GPIO1))
+    {
+    	lcd_set_display_ptr(2,0,3,127);
+        lcd_write_string("SUSF / APEX / ASTRA");
+        lcd_write_string_medium("Matt Brejza", 0, 0);
+        while(1);
+    }
 
     char buff[20];
 
@@ -106,10 +110,9 @@ int main(void)
 
 
 	uint8_t lo1_p = 0,lo2_p = 0;
-	usart_send_blocking(USART1,"H");
 
 
-
+	lcd_set_display_ptr(0,0,3,127);
 	while(1)
 	{
 		uint8_t lo;

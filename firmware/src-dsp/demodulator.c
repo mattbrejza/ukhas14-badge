@@ -158,7 +158,7 @@ uint16_t char_sync_count(t_char_count_state *state, int32_t *input, char *output
 			state->mask = 1;
 			state->current_char = 0;
 			if (*input < 0){
-				state->bit_counter = data_bits;
+				state->bit_counter = data_bits+1;
 				state->sample_counter = 16+8-3;
 			}
 		}
@@ -173,7 +173,7 @@ uint16_t char_sync_count(t_char_count_state *state, int32_t *input, char *output
 				state->mask = state->mask << 1;
 
 				state->bit_counter--;
-				if (state->bit_counter == 0){
+				if (state->bit_counter == 1){
 					*output = state->current_char;
 					out_count++;
 					output++;
@@ -199,7 +199,7 @@ uint16_t char_sync(t_char_sync_state *state, int32_t *input, char *output, uint1
 			state->mask = 1;
 			state->current_char = 0;
 			if (*input < 0)
-				state->bit_counter = data_bits;
+				state->bit_counter = data_bits + 1;
 		}
 		else
 		{
@@ -208,7 +208,7 @@ uint16_t char_sync(t_char_sync_state *state, int32_t *input, char *output, uint1
 			state->mask = state->mask << 1;
 
 			state->bit_counter--;
-			if (state->bit_counter == 0){
+			if (state->bit_counter == 1){
 				*output = state->current_char;
 				out_count++;
 				output++;
