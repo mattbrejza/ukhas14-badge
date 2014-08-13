@@ -57,6 +57,7 @@ t_fir_state fs3 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[30], .l
 t_fir_state fs4 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[45], .length = 16};
 t_bit_sync_state s2;
 t_char_sync_state s3;
+t_char_count_state s4;
 
 volatile uint8_t half_complete_flag = 0;
 volatile uint8_t full_complete_flag = 0;
@@ -69,8 +70,8 @@ int main(void)
     lcd_init();
     lcd_clear();
     lcd_set_display_ptr(2,0,3,127);
-    lcd_write_string("SUSF / APEX / ASTRA");
-    lcd_write_string_medium("Matt Brejza", 0, 0);
+  //  lcd_write_string("SUSF / APEX / ASTRA");
+  //  lcd_write_string_medium("Matt Brejza", 0, 0);
     /* Blink the LED (PC8) on the board. */
 
     char buff[20];
@@ -138,22 +139,22 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = (((int32_t)adc_buffer[i]) * ((int32_t)(sin_lut_1k[lo] >> 4))) >> 12;   //!!!!!!!!11
+			buffer1[j] = (((int32_t)adc_buffer[i]-2000) * ((int32_t)(sin_lut_1k[lo]))) >> 12;   //!!!!!!!!11
 			lo++;
 			j++;
 			if (lo >= 8)
 				lo = 0;
 		}
 		uint8_t c1 = cic_filter(&cs1, buffer1, buffer2,  BUFF_LEN);
-		//for (i = 0; i < c1; i++){
-		//	buffer2[i] = buffer2[i] >> 4;
+		for (i = 0; i < c1; i++){
+			buffer2[i] = buffer2[i] >> 2;
 			//my_usart_print_int(USART1, buffer2[i]);
-		//}
+		}
 		fir_filter(&fs1, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] = -(buffer1[i] * buffer1[i]);
+			buffer3[i] = +(buffer1[i] * buffer1[i]);
 //			my_usart_print_int(USART1, buffer1[i]);
 		}
 
@@ -162,20 +163,20 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = ((adc_buffer[i]) * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-2000) * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
 			lo++;
 			j++;
 			if (lo >= 8)
 				lo = 0;
 		}
 		c1 = cic_filter(&cs2, buffer1, buffer2,  BUFF_LEN);
-		//for (i = 0; i < c1; i++)
-		//			buffer2[i] = buffer2[i] >> 2;
+		for (i = 0; i < c1; i++)
+					buffer2[i] = buffer2[i] >> 2;
 		fir_filter(&fs2, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] -= buffer1[i] * buffer1[i];
+			buffer3[i] += buffer1[i] * buffer1[i];
 		}
 
 		lo1_p = lo;
@@ -185,20 +186,20 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = ((adc_buffer[i]-000) * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-2000) * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
 			lo++;
 			j++;
 			if (lo >= 32)
 				lo = 0;
 		}
 		c1 = cic_filter(&cs3, buffer1, buffer2,  BUFF_LEN);
-		//for (i = 0; i < c1; i++)
-		//			buffer2[i] = buffer2[i] >> 2;
+		for (i = 0; i < c1; i++)
+					buffer2[i] = buffer2[i] >> 2;
 		fir_filter(&fs3, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] += buffer1[i] * buffer1[i];
+			buffer3[i] -= buffer1[i] * buffer1[i];
 		}
 
 		//process cos 750
@@ -206,30 +207,43 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = ((adc_buffer[i]-000) * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-2000) * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
 			lo++;
 			j++;
 			if (lo >= 32)
 				lo = 0;
 		}
 		c1 = cic_filter(&cs4, buffer1, buffer2,  BUFF_LEN);
-		//for (i = 0; i < c1; i++)
-		//			buffer2[i] = buffer2[i] >> 2;
+		for (i = 0; i < c1; i++)
+					buffer2[i] = buffer2[i] >> 2;
 		fir_filter(&fs4, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] += buffer1[i] * buffer1[i];
-
+			buffer3[i] -= buffer1[i] * buffer1[i];
+		//	my_usart_print_int(USART1, buffer3[i]);
 
 		}
 		lo2_p = lo;
 
 
-		uint8_t c2 =  bit_sync(&s2, buffer3, buffer1, c1);
-		uint8_t c3 = char_sync(&s3, buffer1, textout, c2, 7);
+	//	uint8_t c2 =  bit_sync(&s2, buffer3, buffer1, c1);
+
+		//my_usart_print_int(USART1, s2.error_i);
+		//for (i = 0; i < c2; i++)
+		//{
+		//	if (buffer1[i] > 0)
+		//		my_usart_print_int(USART1, 1);
+		//	else
+		//		my_usart_print_int(USART1, 0);
+		//}
+
+	//	uint8_t c3 = char_sync(&s3, buffer1, textout, c2, 7);
+		uint8_t c3 = char_sync_count(&s4, buffer3, textout, c1, 7);
+		textout[1] = 0;
 		if (c3 > 0)
-			usart_send_blocking(USART1, textout[0]);
+			lcd_write_string(&textout[0]);
+			//usart_send_blocking(USART1, textout[0]);
 
 		/*
 
@@ -406,7 +420,7 @@ void init(void)
 	//timer_enable_oc_output(TIM1, TIM_OC4);
 	//timer_set_oc_value(TIM1, TIM_OC4, 200);
 	timer_set_prescaler(TIM1, 0);
-	timer_set_period(TIM1, 937);
+	timer_set_period(TIM1, 1000);//937);
 	timer_set_master_mode(TIM1,TIM_CR2_MMS_UPDATE);
 	timer_enable_counter(TIM1);
 

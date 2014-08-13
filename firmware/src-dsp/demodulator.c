@@ -109,8 +109,8 @@ uint16_t bit_sync(t_bit_sync_state *state, int32_t *input, int32_t *output, uint
 		case 7:
 			if (state->vco < 103)
 				state->pos = 6;
-			else if (state->vco > 137)
-				state->pos = 9;
+			//else if (state->vco > 137)
+			//	state->pos = 9;
 			else if (state->vco > 122)
 				state->pos = 8;
 			break;
@@ -139,11 +139,52 @@ uint16_t bit_sync(t_bit_sync_state *state, int32_t *input, int32_t *output, uint
 			state->pos = 0;
 
 		//                 P=0.5               I=0.06
-		state->vco += 16 + (state->error>>1) ;// + state.error_i;
+		state->vco += 16 + (state->error>>1)  + (state->error_i>>1);
 
 		input++;
 	}
 	return count;
+}
+
+uint16_t char_sync_count(t_char_count_state *state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
+{
+	uint16_t i,out_count;
+	out_count = 0;
+	for (i = 0; i < len; i++)
+	{
+
+		if (state->bit_counter == 0)  //idle state
+		{
+			state->mask = 1;
+			state->current_char = 0;
+			if (*input < 0){
+				state->bit_counter = data_bits;
+				state->sample_counter = 16+8-3;
+			}
+		}
+		else
+		{
+			state->sample_counter--;
+			if (state->sample_counter == 0)
+			{
+				state->sample_counter = 15;
+				if (*input > 0)
+					state->current_char |= state->mask;
+				state->mask = state->mask << 1;
+
+				state->bit_counter--;
+				if (state->bit_counter == 0){
+					*output = state->current_char;
+					out_count++;
+					output++;
+				}
+			}
+		}
+
+		input++;
+
+	}
+	return out_count;
 }
 
 uint16_t char_sync(t_char_sync_state *state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
@@ -157,12 +198,12 @@ uint16_t char_sync(t_char_sync_state *state, int32_t *input, char *output, uint1
 		{
 			state->mask = 1;
 			state->current_char = 0;
-			if (*input > 0)
+			if (*input < 0)
 				state->bit_counter = data_bits;
 		}
 		else
 		{
-			if (*input < 0)
+			if (*input > 0)
 				state->current_char |= state->mask;
 			state->mask = state->mask << 1;
 
