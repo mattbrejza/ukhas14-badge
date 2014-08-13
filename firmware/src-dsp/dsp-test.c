@@ -147,85 +147,112 @@ int tyty;
 		////	adc_buffer[i] = adc_buffer[i] << 2;
 		//}
 
-		//process sin 1k
-		for (i = 0; i < BUFF_LEN; i++)
-		{
-			buffer1[i] = (adc_buffer[i] * sin_lut_1k[lo]) >> 12;   //!!!!!!!!11
-			lo++;
-			if (lo >= 8)
-				lo = 0;
-		}
-		uint16_t c1 = cic_filter(&cs1, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(&fs1, buffer2, buffer1,  c1);
-		for (i = 0; i < c1; i++)
-		{
-			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] = +(buffer1[i] * buffer1[i]);
-		}
+#define BLOCK 128
+		int count = 0;
+		uint16_t start,end;
 
-		//process cos 1k
-		lo = lo1_p;
-		for (i = 0; i < BUFF_LEN; i++)
-		{
-			buffer1[i] = (adc_buffer[i] * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
-			lo++;
-			if (lo >= 8)
-				lo = 0;
-		}
-		c1 = cic_filter(&cs2, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(&fs2, buffer2, buffer1,  c1);
-		for (i = 0; i < c1; i++)
-		{
-			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] += buffer1[i] * buffer1[i];
-		}
-		lo1_p = lo;
+		start = 0;
+		end = BLOCK;
 
-		//process sin 750
-		lo = lo2_p;
-		for (i = 0; i < BUFF_LEN; i++)
-		{
-			buffer1[i] = (adc_buffer[i] * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
-			lo++;
-			if (lo >= 32)
-				lo = 0;
-		}
-		c1 = cic_filter(&cs3, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(&fs3, buffer2, buffer1,  c1);
-		for (i = 0; i < c1; i++)
-		{
-			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] -= buffer1[i] * buffer1[i];
-		}
+		while (end < BUFF_LEN)
+	/*	{
 
-		//process cos 750
-		lo = lo2_p;
-		for (i = 0; i < BUFF_LEN; i++)
+			uint16_t c1 = cic_filter(&cs1, &input[i], buffer2,  BLOCK);
+			for (i = 0; i < c1; i++)
+			{
+				printf("%i, ",buffer2[i]);
+			}
+			start = end;
+			end += BLOCK;
+
+		} */
 		{
-			buffer1[i] = (adc_buffer[i] * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
-			lo++;
-			if (lo >= 32)
-				lo = 0;
+
+			//process sin 1k
+			for (i = start; i < end; i++)
+			{
+				buffer1[i] = (adc_buffer[i] * sin_lut_1k[lo]) >> 12;   //!!!!!!!!11
+				lo++;
+				if (lo >= 8)
+					lo = 0;
+			}
+			uint16_t c1 = cic_filter(&cs1, buffer1, buffer2,  BLOCK);
+			for (i = 0; i < c1; i++)
+						{
+							printf("%i, ",buffer1[i]);
+						}
+			fir_filter(&fs1, buffer2, buffer1,  c1);
+			for (i = 0; i < c1; i++)
+			{
+				buffer1[i] = buffer1[i] >> 18;
+				buffer3[i] = +(buffer1[i] * buffer1[i]);
+			}
+
+			//process cos 1k
+			lo = lo1_p;
+			for (i = start; i < end; i++)
+			{
+				buffer1[i] = (adc_buffer[i] * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
+				lo++;
+				if (lo >= 8)
+					lo = 0;
+			}
+			c1 = cic_filter(&cs2, buffer1, buffer2,  BLOCK);
+			fir_filter(&fs2, buffer2, buffer1,  c1);
+			for (i = 0; i < c1; i++)
+			{
+				buffer1[i] = buffer1[i] >> 18;
+				buffer3[i] += buffer1[i] * buffer1[i];
+			}
+			lo1_p = lo;
+
+			//process sin 750
+			lo = lo2_p;
+			for (i = start; i < end; i++)
+			{
+				buffer1[i] = (adc_buffer[i] * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
+				lo++;
+				if (lo >= 32)
+					lo = 0;
+			}
+			c1 = cic_filter(&cs3, buffer1, buffer2,  BLOCK);
+			fir_filter(&fs3, buffer2, buffer1,  c1);
+			for (i = 0; i < c1; i++)
+			{
+				buffer1[i] = buffer1[i] >> 18;
+				buffer3[i] -= buffer1[i] * buffer1[i];
+			}
+
+			//process cos 750
+			lo = lo2_p;
+			for (i = start; i < end; i++)
+			{
+				buffer1[i] = (adc_buffer[i] * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
+				lo++;
+				if (lo >= 32)
+					lo = 0;
+			}
+			c1 = cic_filter(&cs4, buffer1, buffer2,  BLOCK);
+			fir_filter(&fs4, buffer2, buffer1,  c1);
+			for (i = 0; i < c1; i++)
+			{
+				buffer1[i] = buffer1[i] >> 18;
+				buffer3[i] -= buffer1[i] * buffer1[i];
+			}
+			lo2_p = lo;
+
+
+
+
+			uint16_t c2 =  bit_sync(&s2, buffer3, buffer1, c1);
+			uint16_t c3 = char_sync(&s3, buffer1, textout, c2, 7);
+
+
+			start = end;
+			end += BLOCK;
+		//	puts(textout);
 		}
-		c1 = cic_filter(&cs4, buffer1, buffer2,  BUFF_LEN);
-		fir_filter(&fs4, buffer2, buffer1,  c1);
-		for (i = 0; i < c1; i++)
-		{
-			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] -= buffer1[i] * buffer1[i];
-		}
-		lo2_p = lo;
-
-		for (i = 0; i < c1; i++)
-		{
-			printf("%i, ",buffer3[i]);
-		}
-
-
-		uint16_t c2 =  bit_sync(&s2, buffer3, buffer1, c1);
-		uint16_t c3 = char_sync(&s3, buffer1, textout, c2, 7);
-
-		puts(textout);
+		printf("\r\n\r\n");
 
 int g = 6;
 g+=i;

@@ -112,7 +112,7 @@ int main(void)
 	while(1)
 	{
 		uint8_t lo;
-		uint16_t i;
+		uint16_t i,j;
 		lo = lo1_p;
 
 
@@ -135,30 +135,36 @@ int main(void)
 
 
 		//process sin 1k
+		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = ((adc_buffer[i]) * sin_lut_1k[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = (((int32_t)adc_buffer[i]) * ((int32_t)(sin_lut_1k[lo] >> 4))) >> 12;   //!!!!!!!!11
 			lo++;
+			j++;
 			if (lo >= 8)
 				lo = 0;
 		}
 		uint8_t c1 = cic_filter(&cs1, buffer1, buffer2,  BUFF_LEN);
-		for (i = 0; i < c1; i++)
-			buffer2[i] = buffer2[i] >> 4;
+		//for (i = 0; i < c1; i++){
+		//	buffer2[i] = buffer2[i] >> 4;
+			//my_usart_print_int(USART1, buffer2[i]);
+		//}
 		fir_filter(&fs1, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] = buffer1[i] * buffer1[i];
+			buffer3[i] = -(buffer1[i] * buffer1[i]);
 //			my_usart_print_int(USART1, buffer1[i]);
 		}
 
 		//process cos 1k
 		lo = lo1_p;
+		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = ((atest[i]) * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]) * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
 			lo++;
+			j++;
 			if (lo >= 8)
 				lo = 0;
 		}
@@ -169,16 +175,19 @@ int main(void)
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] += buffer1[i] * buffer1[i];
+			buffer3[i] -= buffer1[i] * buffer1[i];
 		}
+
 		lo1_p = lo;
 
 		//process sin 750
 		lo = lo2_p;
+		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = ((atest[i]-000) * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-000) * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
 			lo++;
+			j++;
 			if (lo >= 32)
 				lo = 0;
 		}
@@ -189,15 +198,17 @@ int main(void)
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] -= buffer1[i] * buffer1[i];
+			buffer3[i] += buffer1[i] * buffer1[i];
 		}
 
 		//process cos 750
 		lo = lo2_p;
+		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[i] = ((atest[i]-000) * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-000) * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
 			lo++;
+			j++;
 			if (lo >= 32)
 				lo = 0;
 		}
@@ -208,7 +219,7 @@ int main(void)
 		for (i = 0; i < c1; i++)
 		{
 			buffer1[i] = buffer1[i] >> 18;
-			buffer3[i] -= buffer1[i] * buffer1[i];
+			buffer3[i] += buffer1[i] * buffer1[i];
 
 
 		}
@@ -218,7 +229,7 @@ int main(void)
 		uint8_t c2 =  bit_sync(&s2, buffer3, buffer1, c1);
 		uint8_t c3 = char_sync(&s3, buffer1, textout, c2, 7);
 		if (c3 > 0)
-			usart_send_blocking(USART1, &textout[0]);
+			usart_send_blocking(USART1, textout[0]);
 
 		/*
 
