@@ -3,6 +3,8 @@
  *
  * Jon Sowman 2014
  * <jon@jonsowman.com>
+ * Matt Brejza 2014
+ * <matt@brejza.com>
  */
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/stm32/rcc.h>
@@ -27,10 +29,8 @@ static void my_usart_print_int(uint32_t usart, int32_t value);
 
 #define BUFF_LEN 128
 
-//volatile int16_t atest[] = {0, 119, 227, 295, 259, 189, 30, -34, -25, 98, 216, 324, 291, 245, 110, 5, -1, 55, 182, 275, 340, 255, 212, 120, 7, 47, 139, 243, 273, 241, 183, 31, -37, 22, 135, 247, 303, 294, 219, 124, 15, -16, 86, 179, 284, 292, 252, 207, 34, -10, 38, 152, 257, 286, 249, 179, 43, -9, 36, 133, 263, 292, 271, 211, 79, -7, -3, 95, 235, 312, 284, 242, 153, 36, 3, 63, 199, 265, 287, 198, 104, 20, -48, 44, 166, 275};
 
 volatile int16_t adc_buffer[BUFF_LEN*2] = {0};
-//int16_t adc_buffer[] = {-333, -506, -436, -157, 200, 462, 488, 236, -176, -481, -440, -78, 332, 512, 354, -45, -418, -496, -228, 191, 482, 447, 104, -311, -511, -369, 18, 395, 505, 272, -143, -462, -471, -160, 260, 502, 409, 41, -357, -511, -319, 87, 435, 490, 213, -209, -488, -439, -95, 315, 511, 361, -31, -403, -503, -262, 156, 468, 466, 148, -269, -505, -399, -25, 367, 511, 309, -101, -443, -486, -201, 221, 492, 432, 81, -326, -512, -352, 46, 412, 501, 251, -169, -474, -459, -135, 281, 507, 390, 11, -376, -509, -298, 115, 450, 481, 188, -233, -496, -424, -66, 336, 512, 342, -60, -420, -498, -239, 181, 479, 453, 121, -292, -509, -381, 4, 386, 508, 287, -128, -456, -476, -175, 245, 499, 416, 52, -347};
 int32_t buffer1[BUFF_LEN];
 int32_t buffer2[BUFF_LEN];   //make smaller
 int32_t buffer3[BUFF_LEN/4];
@@ -47,17 +47,17 @@ const int16_t cos_lut_1k[]  = {1000, 707, 0, -707, -1000, -707, 0, 707};
 const int16_t sin_lut_750[] = {0, 556, 924, 981, 707, 195, -383, -831, -1000, -831, -383, 195, 707, 981, 924, 556, 0, -556, -924, -981, -707, -195, 383, 831, 1000, 831, 383, -195, -707, -981, -924, -556};
 const int16_t cos_lut_750[] = {1000, 831, 383, -195, -707, -981, -924, -556, 0, 556, 924, 981, 707, 195, -383, -831, -1000, -831, -383, 195, 707, 981, 924, 556, 0, -556, -924, -981, -707, -195, 383, 831};
 
-t_cic_state cs1 = {.delay_line_in = &dl_cic[0], .delay_line_out = &dl_cic[4], .stages = 4, .rate = 10};
-t_cic_state cs2 = {.delay_line_in = &dl_cic[8], .delay_line_out = &dl_cic[12], .stages = 4, .rate = 10};
-t_cic_state cs3 = {.delay_line_in = &dl_cic[16], .delay_line_out = &dl_cic[20], .stages = 4, .rate = 10};
-t_cic_state cs4 = {.delay_line_in = &dl_cic[24], .delay_line_out = &dl_cic[28], .stages = 4, .rate = 10};
-t_fir_state fs1 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[0], .length = 16};
-t_fir_state fs2 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[15], .length = 16};
-t_fir_state fs3 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[30], .length = 16};
-t_fir_state fs4 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[45], .length = 16};
-t_bit_sync_state s2;
-t_char_sync_state s3;
-t_char_count_state s4;
+cic_state_t cs1 = {.delay_line_in = &dl_cic[0], .delay_line_out = &dl_cic[4], .stages = 4, .rate = 10};
+cic_state_t cs2 = {.delay_line_in = &dl_cic[8], .delay_line_out = &dl_cic[12], .stages = 4, .rate = 10};
+cic_state_t cs3 = {.delay_line_in = &dl_cic[16], .delay_line_out = &dl_cic[20], .stages = 4, .rate = 10};
+cic_state_t cs4 = {.delay_line_in = &dl_cic[24], .delay_line_out = &dl_cic[28], .stages = 4, .rate = 10};
+fir_state_t fs1 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[0], .length = 16};
+fir_state_t fs2 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[15], .length = 16};
+fir_state_t fs3 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[30], .length = 16};
+fir_state_t fs4 = {.coeff = coeff, .delay_ptr = 0, .delay_line = &dl_fir[45], .length = 16};
+bit_sync_state_t s2;
+char_sync_state_t s3;
+char_count_state_t s4;
 
 volatile uint8_t half_complete_flag = 0;
 volatile uint8_t full_complete_flag = 0;
@@ -70,48 +70,27 @@ int main(void)
     lcd_init();
     lcd_clear();
 
+    /*
     if (gpio_get(GPIOF,GPIO1))
     {
     	lcd_set_display_ptr(2,0,3,127);
-        lcd_write_string("SUSF / APEX / ASTRA");
-        lcd_write_string_medium("Matt Brejza", 0, 0);
+        lcd_write_string("Organisation");
+        lcd_write_string_medium("First Last", 0, 0);
         while(1);
     }
-
-    char buff[20];
-
-
+*/
 
 
 	gpio_mode_setup(GPIOF, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO5);
 	gpio_mode_setup(GPIOF, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO4);
-/*
-	while(1)
-	{
-		//gpio_set(GPIOF, GPIO5);
-		//adc_start_conversion_regular(ADC1);
-		//while (!(adc_eoc(ADC1)));
-		//gpio_clear(GPIOF, GPIO5);
-
-		//uint16_t ar = adc_read_regular(ADC1);
-		//uint32_t tv = DMA1_CMAR1;
-		//my_usart_print_int(USART1, ADC1_DR);//adc_buffer[2]);
-		my_usart_print_int(USART1, adc_buffer[0]);
-		my_usart_print_int(USART1, ADC1_DR);
-		_delay_ms(100);
-
-
-	}*/
 
 
 
-
-
-
-
+	//lo pointers
 	uint8_t lo1_p = 0,lo2_p = 0;
 
 
+	//use the entire display for text out
 	lcd_set_display_ptr(0,0,3,127);
 	while(1)
 	{
@@ -133,7 +112,6 @@ int main(void)
 		half_complete_flag = 0;
 		full_complete_flag = 0;
 
-		//nvic_disable_irq(NVIC_DMA1_CHANNEL1_IRQ);
 
 		gpio_set(GPIOF, GPIO5);
 
@@ -142,17 +120,15 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = (((int32_t)adc_buffer[i]-2000) * ((int32_t)(sin_lut_1k[lo]))) >> 12;   //!!!!!!!!11
+			buffer1[j] = (((int32_t)adc_buffer[i]-2000) * ((int32_t)(sin_lut_1k[lo]))) >> 12;   //!!!!!!!! (arithmetic shift is dodgy)
 			lo++;
 			j++;
 			if (lo >= 8)
 				lo = 0;
 		}
 		uint8_t c1 = cic_filter(&cs1, buffer1, buffer2,  BUFF_LEN);
-		for (i = 0; i < c1; i++){
+		for (i = 0; i < c1; i++)
 			buffer2[i] = buffer2[i] >> 2;
-			//my_usart_print_int(USART1, buffer2[i]);
-		}
 		fir_filter(&fs1, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
@@ -166,7 +142,7 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = ((adc_buffer[i]-2000) * cos_lut_1k[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-2000) * cos_lut_1k[lo]) >> 12;   //!!!!!!!!
 			lo++;
 			j++;
 			if (lo >= 8)
@@ -174,7 +150,7 @@ int main(void)
 		}
 		c1 = cic_filter(&cs2, buffer1, buffer2,  BUFF_LEN);
 		for (i = 0; i < c1; i++)
-					buffer2[i] = buffer2[i] >> 2;
+			buffer2[i] = buffer2[i] >> 2;
 		fir_filter(&fs2, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
@@ -189,7 +165,7 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = ((adc_buffer[i]-2000) * sin_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-2000) * sin_lut_750[lo]) >> 12;   //!!!!!!!!
 			lo++;
 			j++;
 			if (lo >= 32)
@@ -197,7 +173,7 @@ int main(void)
 		}
 		c1 = cic_filter(&cs3, buffer1, buffer2,  BUFF_LEN);
 		for (i = 0; i < c1; i++)
-					buffer2[i] = buffer2[i] >> 2;
+			buffer2[i] = buffer2[i] >> 2;
 		fir_filter(&fs3, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
@@ -210,7 +186,7 @@ int main(void)
 		j=0;
 		for (i = buff_start; i < buff_end; i++)
 		{
-			buffer1[j] = ((adc_buffer[i]-2000) * cos_lut_750[lo]) >> 12;   //!!!!!!!!11
+			buffer1[j] = ((adc_buffer[i]-2000) * cos_lut_750[lo]) >> 12;   //!!!!!!!!
 			lo++;
 			j++;
 			if (lo >= 32)
@@ -218,7 +194,7 @@ int main(void)
 		}
 		c1 = cic_filter(&cs4, buffer1, buffer2,  BUFF_LEN);
 		for (i = 0; i < c1; i++)
-					buffer2[i] = buffer2[i] >> 2;
+			buffer2[i] = buffer2[i] >> 2;
 		fir_filter(&fs4, buffer2, buffer1,  c1);
 		for (i = 0; i < c1; i++)
 		{
@@ -230,8 +206,8 @@ int main(void)
 		lo2_p = lo;
 
 
+		//this code uses early-late sync, is a bit broken
 	//	uint8_t c2 =  bit_sync(&s2, buffer3, buffer1, c1);
-
 		//my_usart_print_int(USART1, s2.error_i);
 		//for (i = 0; i < c2; i++)
 		//{
@@ -240,16 +216,18 @@ int main(void)
 		//	else
 		//		my_usart_print_int(USART1, 0);
 		//}
-
 	//	uint8_t c3 = char_sync(&s3, buffer1, textout, c2, 7);
+
 		uint8_t c3 = char_sync_count(&s4, buffer3, textout, c1, 7);
 		textout[1] = 0;
-		if (c3 > 0)
+		if (c3 > 0){
 			lcd_write_string(&textout[0]);
-			//usart_send_blocking(USART1, textout[0]);
+			usart_send_blocking(USART1, textout[0]);
+		}
 
 		/*
-
+		 * debug code to output input over uart.
+		 * ensure serial baud is set high
 		for (i = buff_start; i < buff_end; i++)
 		{
 			my_usart_print_int(USART1, adc_buffer[i]-last);
@@ -259,65 +237,6 @@ int main(void)
 		gpio_clear(GPIOF, GPIO5);
 	}
 
-
-
-
-
-
-
-/*
-    int32_t input[100];
-    int32_t output[100] = {0};
-	int32_t delay_line1[4] = {0};
-	int32_t delay_line2[4] = {0};
-    const int32_t coeff[] = {0, -2, -4, 7, 17, 0, -36, -31, 41, 90, 0, -166, -146, 230, 768, 1024, 768, 230, -146, -166, 0, 90, 41, -31, -36, 0, 17, 7, -4, -2, 0};
-	int32_t delay_line[30] = {0};
-	t_fir_state s;
-	s.coeff = coeff;
-	s.delay_ptr = 0;
-	s.delay_line = delay_line;
-	s.length = 31;
-
-	t_cic_state s1 = {.delay_line_in = delay_line1, .delay_line_out = delay_line2, .stages = 4, .rate = 5};
-
-
-
-
-    while(1)
-    {
-
-
-
-		gpio_set(GPIOF, GPIO5);
-		fir_filter(s, input, output,  100);
-		gpio_clear(GPIOF, GPIO5);
-
-		_delay_ms(60);
-
-		//gpio_set(GPIOF, GPIO5);
-		//cic_filter(s1, input, output,  100);
-		//gpio_clear(GPIOF, GPIO5);
-		_delay_ms(90);
-
-    } */
-    while (1){
-        _delay_ms(1000);
-
-        sprintf(buff,"t: %u     ",(unsigned int)TIM3_CNT);
-       // itostr(buff,TIM3_CNT);
-        lcd_set_display_ptr(2,0,3,127);
-        lcd_write_string(buff);
-
-        //gpio_set(GPIOF, GPIO1);
-        //_delay_ms(1000);
-
-       //gpio_clear(GPIOF, GPIO1);
-        //}
-        
-        if (!(GPIOF_IDR & GPIO1))
-        	lcd_write_string("A");
-		
-		}
 
     return 0;
 }
@@ -340,10 +259,13 @@ void dma1_channel1_isr(void)
 
 void init(void)
 {
+	rcc_clock_setup_in_hsi_out_48mhz();
+
     rcc_periph_clock_enable(RCC_GPIOF);
     rcc_periph_clock_enable(RCC_GPIOB);
     gpio_mode_setup(GPIOF, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO1);
     
+    //pwm timer for mtx2
     rcc_periph_clock_enable(RCC_TIM3);
     timer_reset(TIM3);
     timer_set_mode(TIM3, TIM_CR1_CKD_CK_INT_MUL_2,
@@ -366,13 +288,12 @@ void init(void)
 	adc_calibrate_start(ADC1);
 	adc_calibrate_wait_finish(ADC1);
 	//adc_set_operation_mode(ADC1, ADC_MODE_SCAN); //adc_set_operation_mode(ADC1, ADC_MODE_SCAN_INFINITE);
-	adc_set_operation_mode(ADC1, ADC_MODE_SCAN);//ADC_MODE_SCAN_INFINITE);
-	//adc_disable_external_trigger_regular(ADC1); //adc_enable_external_trigger_regular(ADC1, 1<<6, 1<<10);
+	adc_set_operation_mode(ADC1, ADC_MODE_SCAN);
 //	adc_set_single_conversion_mode(ADC1);
-	adc_enable_external_trigger_regular(ADC1, 0<<6, 1<<10);//fucking libopencm3
+	adc_enable_external_trigger_regular(ADC1, 0<<6, 1<<10);
 	adc_set_right_aligned(ADC1);
-	ADC1_CFGR1 |= ADC_CFGR1_DMACFG;
-	adc_enable_dma(ADC1);   //!!!!!!!!!!!!!!!!!111
+	ADC1_CFGR1 |= ADC_CFGR1_DMACFG;   //dma circular mode
+	adc_enable_dma(ADC1);
 	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_013DOT5);
 	adc_set_regular_sequence(ADC1, 1, channel_array);
 	adc_set_resolution(ADC1, ADC_RESOLUTION_12BIT);
@@ -391,44 +312,29 @@ void init(void)
 	dma_enable_circular_mode(DMA1,1);
 	dma_set_read_from_peripheral(DMA1,1);
 	dma_enable_memory_increment_mode(DMA1,1);
-//	dma_disable_peripheral_increment_mode(DMA1,1);
 	dma_set_peripheral_size(DMA1,1,DMA_CCR_PSIZE_16BIT);
 	dma_set_memory_size(DMA1,1,DMA_CCR_MSIZE_16BIT);
-	//dma_disable_mem2mem_mode(DMA1,1);
 	dma_set_priority(DMA1,1,DMA_CCR_PL_HIGH);
 	dma_enable_half_transfer_interrupt(DMA1,1);
 	dma_enable_transfer_complete_interrupt(DMA1,1);
-	//dma_clear_interrupt_flags(DMA1,1,DMA_HTIF | DMA_TCIF);
 
 
 
-	/*
-	adc_power_off(ADC1);
-	adc_set_operation_mode(ADC1, ADC_MODE_SCAN);
-	adc_set_single_conversion_mode(ADC1);
-	adc_enable_external_trigger_regular(ADC1,0,1<<10);
-	//adc_enable_eoc_interrupt_injected(ADC1);
-	adc_set_right_aligned(ADC1);
-	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_013DOT5);
-	adc_power_on(ADC1);
-*/
+
 	_delay_ms(100);
 
 	//tim1 (adc tigger)
 	rcc_periph_clock_enable(RCC_TIM1);
 	timer_reset(TIM1);
-	//timer_set_mode(TIM1, TIM_CR1_CKD_CK_INT_MUL_2,
-	//               TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
-	//timer_set_oc_mode(TIM1, TIM_OC4, TIM_OCM_PWM2);
-	//timer_enable_oc_output(TIM1, TIM_OC4);
-	//timer_set_oc_value(TIM1, TIM_OC4, 200);
 	timer_set_prescaler(TIM1, 0);
-	timer_set_period(TIM1, 1000);//937);
+	timer_set_period(TIM1, 1000*6);
 	timer_set_master_mode(TIM1,TIM_CR2_MMS_UPDATE);
 	timer_enable_counter(TIM1);
 
+
+	//start adc and dma
 	ADC_CR(ADC1) |= ADC_CR_ADSTART;
-	dma_enable_channel(DMA1,1);              //!!!!!!!!!!!!!!!!!111
+	dma_enable_channel(DMA1,1);
 
 
 
@@ -436,18 +342,17 @@ void init(void)
 	rcc_periph_clock_enable(RCC_USART1);
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
 	gpio_set_af(GPIOA, GPIO_AF1, GPIO9);
-	usart_set_baudrate(USART1, 500000 );
+	usart_set_baudrate(USART1, 9600 );
 	usart_set_databits(USART1, 8);
 	usart_set_stopbits(USART1, USART_CR2_STOP_1_0BIT);
 	usart_set_mode(USART1, USART_MODE_TX);
 	usart_set_parity(USART1, USART_PARITY_NONE);
 	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-
-	/* Finally enable the USART. */
 	usart_enable(USART1);
 
 }
 
+//from libopencm3 example
 static void my_usart_print_int(uint32_t usart, int32_t value)
 {
 	int8_t i;

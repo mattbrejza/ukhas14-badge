@@ -1,3 +1,28 @@
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2014 Matthew Brejza
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -10,7 +35,7 @@ inline int8_t sign(int32_t in){if (in > 0){return 1;}else{return -1;}}
 inline int8_t max(int8_t in1, int8_t in2){if (in1 > in2){return in1;}else{return in2;}}
 inline int8_t min(int8_t in1, int8_t in2){if (in1 > in2){return in2;}else{return in1;}}
 
-void fir_filter(t_fir_state *state, int32_t *input, int32_t *output, uint16_t len)
+void fir_filter(fir_state_t *state, int32_t *input, int32_t *output, uint16_t len)
 {
 
 	uint16_t i,j;
@@ -38,8 +63,8 @@ void fir_filter(t_fir_state *state, int32_t *input, int32_t *output, uint16_t le
 	}
 }
 
-
-uint16_t cic_filter(t_cic_state *state, int32_t *input, int32_t *output, uint16_t len)
+//be careful of bit growth
+uint16_t cic_filter(cic_state_t *state, int32_t *input, int32_t *output, uint16_t len)
 {
 
 	uint16_t i,j,out_count;
@@ -76,8 +101,8 @@ uint16_t cic_filter(t_cic_state *state, int32_t *input, int32_t *output, uint16_
 	return out_count;
 }
 
-
-uint16_t bit_sync(t_bit_sync_state *state, int32_t *input, int32_t *output, uint16_t len)
+//early-late bit sync (currently a bit broken)
+uint16_t bit_sync(bit_sync_state_t *state, int32_t *input, int32_t *output, uint16_t len)
 {
 
 	uint16_t i,count;
@@ -146,7 +171,9 @@ uint16_t bit_sync(t_bit_sync_state *state, int32_t *input, int32_t *output, uint
 	return count;
 }
 
-uint16_t char_sync_count(t_char_count_state *state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
+
+//uses the method which looks for a start bit and counts samples
+uint16_t char_sync_count(char_count_state_t *state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
 {
 	uint16_t i,out_count;
 	out_count = 0;
@@ -159,7 +186,7 @@ uint16_t char_sync_count(t_char_count_state *state, int32_t *input, char *output
 			state->current_char = 0;
 			if (*input < 0){
 				state->bit_counter = data_bits+1;
-				state->sample_counter = 16+8-3;
+				state->sample_counter = 16+8-1;
 			}
 		}
 		else
@@ -187,7 +214,7 @@ uint16_t char_sync_count(t_char_count_state *state, int32_t *input, char *output
 	return out_count;
 }
 
-uint16_t char_sync(t_char_sync_state *state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
+uint16_t char_sync(char_sync_state_t *state, int32_t *input, char *output, uint16_t len, uint8_t data_bits)
 {
 	uint16_t i,out_count;
 	out_count = 0;
