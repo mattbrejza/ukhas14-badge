@@ -7,7 +7,7 @@
 
 #include <stdlib.h>
 
-void test(t_fir_state in)
+void test(fir_state_t in)
 {
 	in.delay_line = 4;
 }
@@ -15,7 +15,7 @@ void test(t_fir_state in)
 int main(void) {
 	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
 
-	t_fir_state fsgg;
+	fir_state_t fsgg;
 	fsgg.delay_line = 3;
 	printf("%i",fsgg.delay_line);
 	test(fsgg);
@@ -60,7 +60,7 @@ int tyty;
 	int32_t delay_line[30] = {0};
 
 /*
-	t_fir_state s;
+	fir_state_t s;
 	s.coeff = coeff;
 	s.delay_ptr = 0;
 	s.delay_line = delay_line;
@@ -69,14 +69,14 @@ int tyty;
 	fir_filter(s, input, output,  130);
 */
 
-	t_bit_sync_state s2;
-	t_char_sync_state s3;
+	bit_sync_state_t s2;
+	char_sync_state_t s3;
 
 
 	int32_t delay_line1[4] = {0};
 	int32_t delay_line2[4] = {0};
 
-	t_cic_state s1 = {.delay_line_in = delay_line1, .delay_line_out = delay_line2, .stages = 4, .rate = 5};
+	cic_state_t s1 = {.delay_line_in = delay_line1, .delay_line_out = delay_line2, .stages = 4, .rate = 5};
 
 	//s1.delay_line_in = delay_line1;
 	//s1.delay_line_out = delay_line2;
@@ -124,14 +124,14 @@ int tyty;
 		const int32_t coeff16[] = {-3, 13, 34, 56, 78, 98, 114, 125, 128, 125, 114, 98, 78, 56, 34, 13, -3};
 
 
-		t_cic_state cs1 = {.delay_line_in = &dl_cic[0], .delay_line_out = &dl_cic[4], .stages = 4, .rate = 10};
-		t_cic_state cs2 = {.delay_line_in = &dl_cic[8], .delay_line_out = &dl_cic[12], .stages = 4, .rate = 10};
-		t_cic_state cs3 = {.delay_line_in = &dl_cic[16], .delay_line_out = &dl_cic[20], .stages = 4, .rate = 10};
-		t_cic_state cs4 = {.delay_line_in = &dl_cic[24], .delay_line_out = &dl_cic[28], .stages = 4, .rate = 10};
-		t_fir_state fs1 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[0], .length = 16};
-		t_fir_state fs2 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[15], .length = 16};
-		t_fir_state fs3 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[30], .length = 16};
-		t_fir_state fs4 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[45], .length = 16};
+		cic_state_t cs1 = {.delay_line_in = &dl_cic[0], .delay_line_out = &dl_cic[4], .stages = 4, .rate = 10};
+		cic_state_t cs2 = {.delay_line_in = &dl_cic[8], .delay_line_out = &dl_cic[12], .stages = 4, .rate = 10};
+		cic_state_t cs3 = {.delay_line_in = &dl_cic[16], .delay_line_out = &dl_cic[20], .stages = 4, .rate = 10};
+		cic_state_t cs4 = {.delay_line_in = &dl_cic[24], .delay_line_out = &dl_cic[28], .stages = 4, .rate = 10};
+		fir_state_t fs1 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[0], .length = 16};
+		fir_state_t fs2 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[15], .length = 16};
+		fir_state_t fs3 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[30], .length = 16};
+		fir_state_t fs4 = {.coeff = coeff16, .delay_ptr = 0, .delay_line = &dl_fir[45], .length = 16};
 
 
 
@@ -283,14 +283,14 @@ uint16_t datalen = 8000;
 	const int32_t coeff1[] = {1, -7, -14, -20, -24, -24, -19, -8, 9, 29, 53, 77, 100, 118, 129, 134, 129, 118, 100, 77, 53, 29, 9, -8, -19, -24, -24, -20, -14, -7, 1};
 
 
-  	t_cic_state cs1 = {.delay_line_in = dl1, .delay_line_out = dl5, .stages = 4, .rate = 5};
-	t_cic_state cs2 = {.delay_line_in = dl2, .delay_line_out = dl6, .stages = 4, .rate = 5};
-	t_cic_state cs3 = {.delay_line_in = dl3, .delay_line_out = dl7, .stages = 4, .rate = 5};
-	t_cic_state cs4 = {.delay_line_in = dl4, .delay_line_out = dl8, .stages = 4, .rate = 5};
-	t_fir_state fs1 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl11, .length = 31};
-	t_fir_state fs2 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl12, .length = 31};
-	t_fir_state fs3 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl13, .length = 31};
-	t_fir_state fs4 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl14, .length = 31};
+  	cic_state_t cs1 = {.delay_line_in = dl1, .delay_line_out = dl5, .stages = 4, .rate = 5};
+	cic_state_t cs2 = {.delay_line_in = dl2, .delay_line_out = dl6, .stages = 4, .rate = 5};
+	cic_state_t cs3 = {.delay_line_in = dl3, .delay_line_out = dl7, .stages = 4, .rate = 5};
+	cic_state_t cs4 = {.delay_line_in = dl4, .delay_line_out = dl8, .stages = 4, .rate = 5};
+	fir_state_t fs1 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl11, .length = 31};
+	fir_state_t fs2 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl12, .length = 31};
+	fir_state_t fs3 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl13, .length = 31};
+	fir_state_t fs4 = {.coeff = coeff1, .delay_ptr = 0, .delay_line = dl14, .length = 31};
 		s.coeff = coeff;
 		s.delay_ptr = 0;
 		s.delay_line = delay_line;
